@@ -112,6 +112,7 @@ function bindElements() {
     homeMode: document.querySelector("[data-home-mode]"),
     playGame: document.querySelector("[data-play-game]"),
     backHome: document.querySelector("[data-back-home]"),
+    rollTeam: document.querySelector("[data-roll-team]"),
     startSeason: document.querySelector("[data-start-season]"),
     gameFormation: document.querySelector("[data-game-formation]"),
     gameMode: document.querySelector("[data-game-mode]"),
