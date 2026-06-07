@@ -670,10 +670,17 @@ function renderGame() {
 
 function renderSeasonHeader() {
   if (!state.season) return;
+  const complete = state.season.complete || state.season.revealed >= state.season.userFixtures.length;
+  if (complete) {
+    state.season.complete = true;
+  }
   els.seasonTeamName.textContent = state.season.teamName;
   els.seasonProgress.textContent = `${state.season.revealed} / ${state.season.userFixtures.length}`;
   els.seasonFixtures.textContent = `${state.season.userFixtures.length} / ${state.season.userFixtures.length} fixtures`;
-  els.seasonStatus.textContent = state.season.complete ? "Season complete" : "Season in progress";
+  els.seasonStatus.textContent = complete ? "Season complete" : "Season in progress";
+  if (complete) {
+    renderSeasonTable();
+  }
 }
 
 function renderSeasonFeed() {
@@ -682,6 +689,7 @@ function renderSeasonFeed() {
     .slice(0, state.season.revealed)
     .map(renderSeasonMatch)
     .join("");
+  scrollSeasonFeedToBottom();
 }
 
 function renderSeasonMatch(match) {
@@ -752,18 +760,23 @@ function renderSeasonTable() {
 function renderSeason() {
   renderSeasonHeader();
   renderSeasonFeed();
-  if (state.season && state.season.complete) {
-    renderSeasonTable();
-  } else if (state.season) {
+  if (state.season && !state.season.complete) {
     els.seasonTableWrap.innerHTML = `<div class="season-placeholder">The table will appear when the season finishes.</div>`;
   }
+}
+
+function scrollSeasonFeedToBottom() {
+  if (!els.seasonFeed) return;
+  requestAnimationFrame(() => {
+    els.seasonFeed.scrollTop = els.seasonFeed.scrollHeight;
+  });
 }
 
 function finishSeason() {
   if (!state.season) return;
   state.season.complete = true;
   state.seasonTimer = null;
-  state.seasonStatus.textContent = "Season complete";
+  els.seasonStatus.textContent = "Season complete";
   renderSeasonHeader();
   renderSeasonFeed();
   renderSeasonTable();
@@ -845,6 +858,7 @@ function animateSeason() {
     els.seasonFeed.insertAdjacentHTML("beforeend", renderSeasonMatch(next));
     state.season.revealed += 1;
     renderSeasonHeader();
+    scrollSeasonFeedToBottom();
 
     if (state.season.revealed >= state.season.userFixtures.length) {
       finishSeason();

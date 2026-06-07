@@ -267,6 +267,7 @@ button:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 0.95fr);
   gap: 1.5rem;
+  align-items: stretch;
 }
 
 .season-feed,
@@ -274,9 +275,20 @@ button:focus-visible {
   min-height: 100%;
 }
 
+.season-feed-panel,
+.season-table-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .season-feed {
   display: grid;
   gap: 0.75rem;
+  flex: 1;
+  overflow-y: auto;
+  max-height: min(62vh, 760px);
+  padding-right: 0.3rem;
 }
 
 .season-match {
@@ -327,6 +339,8 @@ button:focus-visible {
 
 .season-table-wrap {
   overflow: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .season-placeholder {
@@ -580,6 +594,10 @@ button:focus-visible {
 
   .season-layout {
     grid-template-columns: 1fr;
+  }
+
+  .season-feed {
+    max-height: 52vh;
   }
 }
 
