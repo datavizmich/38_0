@@ -1,1 +1,3 @@
 data/EAFC26-Men.csv
+__pycache__/
+*.pyc
