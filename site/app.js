@@ -768,6 +768,11 @@ function renderSeason() {
 function scrollSeasonFeedToBottom() {
   if (!els.seasonFeed) return;
   requestAnimationFrame(() => {
+    const lastMatch = els.seasonFeed.lastElementChild;
+    if (lastMatch) {
+      lastMatch.scrollIntoView({ block: "end", inline: "nearest" });
+      return;
+    }
     els.seasonFeed.scrollTop = Math.max(0, els.seasonFeed.scrollHeight - els.seasonFeed.clientHeight);
   });
 }
