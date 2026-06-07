@@ -19,6 +19,24 @@ const POSITION_ALIASES = {
   RM: ["RM", "RW", "CM"],
 };
 
+const POSITION_ORDER = {
+  GK: 0,
+  LB: 1,
+  LWB: 1,
+  CB: 2,
+  RB: 3,
+  RWB: 3,
+  CDM: 4,
+  CM: 5,
+  CAM: 6,
+  LM: 7,
+  RM: 8,
+  LW: 9,
+  RW: 10,
+  ST: 11,
+  CF: 11,
+};
+
 const state = {
   data: null,
   teams: [],
@@ -111,14 +129,34 @@ function teamPlayers(team) {
   return state.data.players.filter((player) => player.team === team);
 }
 
-function playerComparator(a, b) {
-  return b.ovr - a.ovr || a.name.localeCompare(b.name);
+function positionRank(position) {
+  return POSITION_ORDER[position] ?? 99;
+}
+
+function rosterComparator(a, b) {
+  return positionRank(a.position) - positionRank(b.position) || a.name.localeCompare(b.name);
 }
 
 function playerCanPlaySlot(player, slot) {
   const aliases = POSITION_ALIASES[slot] || [slot];
   const positions = normalizePositions(player);
   return aliases.some((alias) => positions.has(alias));
+}
+
+function usedSlotIndices() {
+  return new Set(state.lineup.keys());
+}
+
+function availableSlotsForPlayer(player) {
+  const occupied = usedSlotIndices();
+  return FORMATIONS[state.formation].flatMap((slot, index) => {
+    if (occupied.has(index)) return [];
+    return playerCanPlaySlot(player, slot) ? [index] : [];
+  });
+}
+
+function playerIsAvailable(player) {
+  return availableSlotsForPlayer(player).length > 0;
 }
 
 function selectedPlayer() {
@@ -161,12 +199,19 @@ function renderRoster() {
     return;
   }
 
-  const ranked = [...players].sort(playerComparator);
-  els.rosterGrid.innerHTML = ranked
+  const rostered = [...players].sort(rosterComparator);
+  els.rosterGrid.innerHTML = rostered
     .map((player) => {
       const isSelected = state.selectedPlayerId === player.id;
+      const unavailable = !playerIsAvailable(player) && !isSelected;
       return `
-        <button class="player-card ${isSelected ? "selected" : ""}" data-player-id="${player.id}" type="button">
+        <button
+          class="player-card ${isSelected ? "selected" : ""} ${unavailable ? "unavailable" : ""}"
+          data-player-id="${player.id}"
+          type="button"
+          ${unavailable ? "disabled" : ""}
+          title="${unavailable ? "No open slot for this player in the current formation" : ""}"
+        >
           <span class="player-name">${escapeHtml(player.name)}</span>
           <span class="player-meta">${escapeHtml(player.position)} · ${player.ovr}</span>
         </button>
@@ -198,6 +243,7 @@ function renderPitch() {
           const canAcceptSelected = selected ? playerCanPlaySlot(selected, slot) : false;
           const canBeClicked = Boolean(selected && canAcceptSelected);
           const layout = FORMATION_LAYOUTS[state.formation][index];
+          const bubble = lockedPlayer ? getPlayerBubbleLabel(lockedPlayer) : "";
           return `
             <button
               class="slot ${lockedPlayer ? "filled" : "empty"} ${canBeClicked ? "target" : ""}"
@@ -208,6 +254,7 @@ function renderPitch() {
             >
               <span class="slot-label">${slot}</span>
               <span class="slot-player">${lockedPlayer ? escapeHtml(lockedPlayer.name) : ""}</span>
+              ${lockedPlayer ? `<span class="slot-bubble" aria-hidden="true" title="${escapeHtml(lockedPlayer.name)}">${escapeHtml(bubble)}</span>` : ""}
             </button>
           `;
         })
@@ -236,6 +283,12 @@ function renderPitch() {
       renderPitch();
     });
   });
+}
+
+function getPlayerBubbleLabel(player) {
+  const parts = player.name.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
 function renderAll() {

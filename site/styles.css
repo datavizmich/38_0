@@ -256,6 +256,16 @@ button:focus-visible {
   border-color: rgba(90, 109, 98, 0.18);
 }
 
+.player-card.unavailable {
+  opacity: 0.38;
+  color: rgba(32, 38, 43, 0.45);
+  cursor: not-allowed;
+}
+
+.player-card.unavailable .player-meta {
+  color: rgba(109, 118, 127, 0.72);
+}
+
 .player-name {
   font-weight: 600;
 }
@@ -366,15 +376,22 @@ button:focus-visible {
 }
 
 .slot-player {
-  min-height: 2.2em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.96);
-  line-height: 1.05;
+  display: none;
+}
+
+.slot-bubble {
+  width: 3.6rem;
+  height: 3.6rem;
+  margin: 0 auto;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .roster-empty {
@@ -422,5 +439,11 @@ button:focus-visible {
   .slot {
     width: 80px;
     height: 80px;
+  }
+
+  .slot-bubble {
+    width: 3rem;
+    height: 3rem;
+    font-size: 0.86rem;
   }
 }
