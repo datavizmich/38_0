@@ -759,6 +759,16 @@ function renderSeason() {
   }
 }
 
+function finishSeason() {
+  if (!state.season) return;
+  state.season.complete = true;
+  state.seasonTimer = null;
+  state.seasonStatus.textContent = "Season complete";
+  renderSeasonHeader();
+  renderSeasonFeed();
+  renderSeasonTable();
+}
+
 function renderAll() {
   renderStats();
   renderHomeSetup();
@@ -828,18 +838,19 @@ function animateSeason() {
     if (!state.season || state.view !== "season") return;
     const next = state.season.userFixtures[state.season.revealed];
     if (!next) {
-      state.season.complete = true;
-      state.seasonTimer = null;
-      state.seasonStatus.textContent = "Season complete";
-      renderSeasonHeader();
-      renderSeasonFeed();
-      renderSeasonTable();
+      finishSeason();
       return;
     }
 
     els.seasonFeed.insertAdjacentHTML("beforeend", renderSeasonMatch(next));
     state.season.revealed += 1;
     renderSeasonHeader();
+
+    if (state.season.revealed >= state.season.userFixtures.length) {
+      state.seasonTimer = setTimeout(finishSeason, 750);
+      return;
+    }
+
     state.seasonTimer = setTimeout(tick, 650);
   };
 
