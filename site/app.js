@@ -818,18 +818,24 @@ function animateSeason() {
 }
 
 function wireControls() {
-  els.playGame.addEventListener("click", startGame);
-  els.backHome.addEventListener("click", goHome);
-  els.seasonBack.addEventListener("click", () => {
+  const on = (element, eventName, handler) => {
+    if (element && typeof element.addEventListener === "function") {
+      element.addEventListener(eventName, handler);
+    }
+  };
+
+  on(els.playGame, "click", startGame);
+  on(els.backHome, "click", goHome);
+  on(els.seasonBack, "click", () => {
     clearSeasonTimer();
     state.view = "game";
     window.location.hash = "game";
     renderAll();
   });
-  els.rollTeam.addEventListener("click", rollTeam);
-  els.startSeason.addEventListener("click", startSeason);
+  on(els.rollTeam, "click", rollTeam);
+  on(els.startSeason, "click", startSeason);
 
-  els.homeFormation.addEventListener("change", () => {
+  on(els.homeFormation, "change", () => {
     state.formation = els.homeFormation.value;
     state.lineup.clear();
     state.selectedPlayerId = null;
@@ -837,7 +843,7 @@ function wireControls() {
     renderAll();
   });
 
-  els.homeMode.addEventListener("change", () => {
+  on(els.homeMode, "change", () => {
     state.mode = els.homeMode.value;
     renderHomeSetup();
     renderGameMeta();
