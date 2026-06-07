@@ -121,24 +121,6 @@ function playerCanPlaySlot(player, slot) {
   return aliases.some((alias) => positions.has(alias));
 }
 
-function candidatesForSlot(players, slot, excludedIds = new Set()) {
-  const eligible = players.filter((player) => !excludedIds.has(player.id) && playerCanPlaySlot(player, slot));
-  if (eligible.length) return [...eligible].sort(playerComparator);
-
-  const unused = players.filter((player) => !excludedIds.has(player.id));
-  if (unused.length) return [...unused].sort(playerComparator);
-
-  return [...players].sort(playerComparator);
-}
-
-function explicitIdsExcluding(slotIndex) {
-  return new Set(
-    [...state.lineup.entries()]
-      .filter(([index]) => index !== slotIndex)
-      .map(([, player]) => player.id)
-  );
-}
-
 function selectedPlayer() {
   if (!state.selectedPlayerId) return null;
   return state.data.players.find((player) => player.id === state.selectedPlayerId) ?? null;
@@ -164,15 +146,16 @@ function renderRoster() {
   els.rosterTitle.textContent = state.currentTeam ?? "No club rolled yet";
   els.rosterSummary.textContent = state.currentTeam
     ? state.selectedPlayerId
-      ? `Selected: ${selected?.name ?? "Unknown"}. Click a valid position on the pitch to lock them in.`
-      : `${players.length} players available for this club. Click one to select it.`
-    : "Roll a team to see the available players.";
+      ? `Selected: ${selected?.name ?? "Unknown"}. Lock them, then reroll for the next player.`
+      : `${players.length} players available. Click one player, then a valid slot.`
+    : state.lineup.size
+      ? "Player locked. Reroll to pick the next team."
+      : "Roll a team to see the available players.";
 
   if (!players.length) {
     els.rosterGrid.innerHTML = `
-      <div class="player-card empty-card">
-        <div class="name">Ready to roll</div>
-        <div class="detail">The team you roll will appear here. Click a player to arm them for the pitch.</div>
+      <div class="roster-empty">
+        ${state.lineup.size ? "Player locked. Roll another team to continue." : "Roll a team to begin."}
       </div>
     `;
     return;
@@ -184,21 +167,8 @@ function renderRoster() {
       const isSelected = state.selectedPlayerId === player.id;
       return `
         <button class="player-card ${isSelected ? "selected" : ""}" data-player-id="${player.id}" type="button">
-          <div class="topline">
-            <div>
-              <div class="name">${escapeHtml(player.name)}</div>
-              <div class="detail">${escapeHtml(player.position)} · ${escapeHtml(player.nation)} · ${player.age ?? "?"} yo</div>
-            </div>
-            <span class="chip accent">${player.ovr}</span>
-          </div>
-          <div class="meta">
-            <span class="chip">${player.pac ?? "-"} PAC</span>
-            <span class="chip">${player.sho ?? "-"} SHO</span>
-            <span class="chip">${player.pas ?? "-"} PAS</span>
-            <span class="chip">${player.dri ?? "-"} DRI</span>
-            <span class="chip">${player.def ?? "-"} DEF</span>
-            <span class="chip">${player.phy ?? "-"} PHY</span>
-          </div>
+          <span class="player-name">${escapeHtml(player.name)}</span>
+          <span class="player-meta">${escapeHtml(player.position)} · ${player.ovr}</span>
         </button>
       `;
     })
@@ -225,7 +195,6 @@ function renderPitch() {
       ${formation
         .map((slot, index) => {
           const lockedPlayer = state.lineup.get(index) ?? null;
-          const isExplicit = state.lineup.has(index);
           const canAcceptSelected = selected ? playerCanPlaySlot(selected, slot) : false;
           const canBeClicked = Boolean(selected && canAcceptSelected);
           const layout = FORMATION_LAYOUTS[state.formation][index];
@@ -237,14 +206,8 @@ function renderPitch() {
               style="grid-row: ${layout.row}; grid-column: ${layout.col};"
               ${canBeClicked ? "" : "disabled"}
             >
-              <div class="slot-label">
-                <span>${slot}</span>
-                <span>${index + 1}/${formation.length}</span>
-              </div>
-              <div class="player">${lockedPlayer ? escapeHtml(lockedPlayer.name) : "Empty slot"}</div>
-              <div class="detail">
-                ${lockedPlayer ? `${escapeHtml(lockedPlayer.position)} · ${lockedPlayer.ovr} OVR` : selected ? "Valid target" : "Select a player"}
-              </div>
+              <span class="slot-label">${slot}</span>
+              <span class="slot-player">${lockedPlayer ? escapeHtml(lockedPlayer.name) : ""}</span>
             </button>
           `;
         })
@@ -268,6 +231,7 @@ function renderPitch() {
 
       state.lineup.set(slotIndex, player);
       state.selectedPlayerId = null;
+      state.currentTeam = null;
       renderRoster();
       renderPitch();
     });

@@ -1,15 +1,17 @@
 :root {
-  color-scheme: dark;
-  --bg: #071018;
-  --bg-soft: rgba(10, 19, 29, 0.72);
-  --panel: rgba(12, 22, 34, 0.88);
-  --panel-border: rgba(179, 207, 255, 0.14);
-  --text: #edf4ff;
-  --muted: #91a7c0;
-  --accent: #61e294;
-  --accent-2: #79a6ff;
-  --accent-3: #ffd166;
-  --shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+  color-scheme: light;
+  --bg: #ece7df;
+  --bg-2: #f6f2eb;
+  --panel: rgba(255, 255, 255, 0.72);
+  --panel-solid: #fbf8f2;
+  --panel-border: rgba(37, 43, 48, 0.1);
+  --text: #20262b;
+  --muted: #6d767f;
+  --accent: #5a6d62;
+  --accent-soft: rgba(90, 109, 98, 0.1);
+  --field: #364941;
+  --field-light: #3f574d;
+  --shadow: 0 14px 40px rgba(33, 38, 43, 0.08);
 }
 
 * {
@@ -26,9 +28,8 @@ body {
   font-family: "Inter", system-ui, sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at top left, rgba(121, 166, 255, 0.18), transparent 33%),
-    radial-gradient(circle at 80% 10%, rgba(97, 226, 148, 0.16), transparent 28%),
-    linear-gradient(135deg, #050b12 0%, #09131e 45%, #07131b 100%);
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 28%),
+    linear-gradient(135deg, var(--bg) 0%, var(--bg-2) 100%);
   overflow-x: hidden;
 }
 
@@ -46,13 +47,13 @@ body {
 .orb-a {
   top: -8rem;
   left: -8rem;
-  background: rgba(97, 226, 148, 0.12);
+  background: rgba(90, 109, 98, 0.12);
 }
 
 .orb-b {
   right: -10rem;
   top: 16rem;
-  background: rgba(121, 166, 255, 0.1);
+  background: rgba(60, 76, 67, 0.08);
 }
 
 .shell {
@@ -125,7 +126,7 @@ select {
   gap: 1rem;
   padding: 0.85rem 1rem;
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.58);
 }
 
 .stat span,
@@ -189,12 +190,13 @@ button:focus-visible {
 }
 
 .primary {
-  background: linear-gradient(135deg, rgba(97, 226, 148, 0.95), rgba(121, 166, 255, 0.9));
-  color: #04110a;
+  background: var(--text);
+  color: #f5f2eb;
+  border-color: rgba(32, 38, 43, 0.3);
 }
 
 .secondary {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.42);
 }
 
 .content {
@@ -223,55 +225,45 @@ button:focus-visible {
 
 .roster-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.8rem;
+  gap: 0.45rem;
 }
 
 .player-card {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 0.9rem;
-}
-
-.player-card .topline {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 0.7rem;
+  justify-content: space-between;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.75rem 0.25rem;
+  border: 0;
+  border-bottom: 1px solid rgba(32, 38, 43, 0.08);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
 }
 
-.player-card .name {
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 1.05rem;
-  margin-bottom: 0.3rem;
+.player-card:hover,
+.player-card:focus-visible {
+  transform: none;
+  border-color: rgba(32, 38, 43, 0.12);
+  background: rgba(255, 255, 255, 0.28);
 }
 
-.meta,
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+.player-card.selected {
+  background: rgba(90, 109, 98, 0.08);
+  box-shadow: none;
+  border-color: rgba(90, 109, 98, 0.18);
 }
 
-.chip {
-  padding: 0.35rem 0.55rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text);
-  font-size: 0.75rem;
-  line-height: 1;
+.player-name {
+  font-weight: 600;
 }
 
-.chip.accent {
-  background: rgba(97, 226, 148, 0.14);
-  color: #92f0b8;
-}
-
-.chip.gold {
-  background: rgba(255, 209, 102, 0.14);
-  color: #ffdf93;
+.player-meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .pitch {
@@ -279,11 +271,11 @@ button:focus-visible {
   padding: 1rem;
   border-radius: 1.25rem;
   background:
-    linear-gradient(180deg, rgba(7, 26, 22, 0.92), rgba(5, 16, 24, 0.95)),
-    radial-gradient(circle at 50% 18%, rgba(97, 226, 148, 0.12), transparent 30%),
-    linear-gradient(90deg, transparent 49%, rgba(255, 255, 255, 0.08) 50%, transparent 51%);
+    linear-gradient(180deg, rgba(54, 73, 65, 0.95), rgba(46, 63, 56, 0.98)),
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.08), transparent 25%),
+    linear-gradient(90deg, transparent 49%, rgba(255, 255, 255, 0.14) 50%, transparent 51%);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), var(--shadow);
+  box-shadow: var(--shadow);
 }
 
 .pitch-grid {
@@ -316,19 +308,19 @@ button:focus-visible {
 }
 
 .slot {
-  min-height: 110px;
-  border-radius: 1rem;
-  padding: 0.8rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025)),
-    radial-gradient(circle at top, rgba(97, 226, 148, 0.1), transparent 60%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 92px;
+  height: 92px;
+  border-radius: 999px;
+  padding: 0.55rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.2rem;
   text-align: left;
   color: var(--text);
+  place-self: center;
   transition:
     transform 180ms ease,
     border-color 180ms ease,
@@ -339,7 +331,7 @@ button:focus-visible {
 .slot:hover:not(:disabled),
 .slot:focus-visible:not(:disabled) {
   transform: translateY(-2px) scale(1.01);
-  border-color: rgba(121, 166, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.4);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
@@ -349,64 +341,46 @@ button:focus-visible {
 }
 
 .slot.empty {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
-    radial-gradient(circle at top, rgba(121, 166, 255, 0.08), transparent 60%);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .slot.filled {
-  border-color: rgba(97, 226, 148, 0.35);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .slot.target {
-  border-color: rgba(255, 209, 102, 0.55);
-  background:
-    linear-gradient(180deg, rgba(255, 209, 102, 0.12), rgba(255, 255, 255, 0.025)),
-    radial-gradient(circle at top, rgba(255, 209, 102, 0.12), transparent 60%);
+  border-color: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .slot-label {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.5rem;
-  color: var(--muted);
-  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.72rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
-.slot .player {
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 1rem;
-  line-height: 1.1;
+.slot-player {
+  min-height: 2.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.96);
+  line-height: 1.05;
 }
 
-.slot .detail {
+.roster-empty {
   color: var(--muted);
-  font-size: 0.84rem;
-}
-
-.player-card {
-  text-align: left;
-  width: 100%;
-  cursor: pointer;
-  transition:
-    transform 180ms ease,
-    border-color 180ms ease,
-    background 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.player-card:hover,
-.player-card:focus-visible {
-  transform: translateY(-2px);
-  border-color: rgba(121, 166, 255, 0.42);
-}
-
-.player-card.selected {
-  border-color: rgba(97, 226, 148, 0.6);
-  background: rgba(97, 226, 148, 0.11);
-  box-shadow: 0 0 0 1px rgba(97, 226, 148, 0.25), var(--shadow);
+  font-size: 0.95rem;
+  padding: 1rem 0.25rem;
 }
 
 .empty-card {
@@ -446,6 +420,7 @@ button:focus-visible {
   }
 
   .slot {
-    min-height: 94px;
+    width: 80px;
+    height: 80px;
   }
 }
