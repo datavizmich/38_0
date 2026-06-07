@@ -25,3 +25,24 @@ python3 -m http.server 4173
 ```
 
 The site loads the Premier League-only player JSON from `site/data/premier-league-players.json`.
+
+## Cloudflare Pages deployment
+
+This repo is ready to deploy as a static site from the `site/` directory.
+
+Use these Cloudflare Pages settings:
+
+- Framework preset: `None`
+- Build command: `exit 0`
+- Build output directory: `site`
+
+Because `site/data/premier-league-players.json` is committed, Cloudflare can publish the site without running the local Python data build during deploy.
+
+If you change `data/EAFC26-Men.csv`, regenerate the filtered JSON locally before pushing:
+
+```bash
+python3 scripts/build_premier_league_data.py
+git add site/data/premier-league-players.json
+git commit -m "Update Premier League dataset"
+git push
+```
