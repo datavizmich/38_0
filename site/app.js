@@ -114,6 +114,7 @@ function bindElements() {
     backHome: document.querySelector("[data-back-home]"),
     rollTeam: document.querySelector("[data-roll-team]"),
     startSeason: document.querySelector("[data-start-season]"),
+    testSeason: document.querySelector("[data-test-season]"),
     gameFormation: document.querySelector("[data-game-formation]"),
     gameMode: document.querySelector("[data-game-mode]"),
     currentTeam: document.querySelector("[data-current-team]"),
@@ -492,6 +493,24 @@ function buildSeason() {
   };
 }
 
+function buildPresetSeasonTeam() {
+  const preferredTeam = state.teams.find((team) => team.toLowerCase() === "liverpool") ?? state.teams[0];
+  if (!preferredTeam) return false;
+
+  state.currentTeam = preferredTeam;
+  state.selectedPlayerId = null;
+  state.lineup.clear();
+
+  const players = teamPlayers(preferredTeam);
+  const filled = buildBestLineup(players);
+  filled.forEach((player, index) => {
+    state.lineup.set(index, player);
+  });
+
+  state.currentTeam = null;
+  return lineUpIsComplete();
+}
+
 function renderStats() {
   els.totalPlayers.textContent = state.data.players.length.toLocaleString();
   els.totalTeams.textContent = state.teams.length.toString();
@@ -521,6 +540,7 @@ function renderGameMeta() {
   els.currentFormation.textContent = state.formation;
   els.startSeason.hidden = !lineUpIsComplete() || state.view !== "game";
   els.rollTeam.disabled = lineUpIsComplete();
+  els.testSeason.disabled = state.view !== "home" && state.view !== "game";
 }
 
 function renderRoster() {
@@ -789,6 +809,12 @@ function startSeason() {
   animateSeason();
 }
 
+function testSeason() {
+  const ready = buildPresetSeasonTeam();
+  if (!ready) return;
+  startSeason();
+}
+
 function animateSeason() {
   if (!state.season) return;
   clearSeasonTimer();
@@ -805,14 +831,16 @@ function animateSeason() {
       state.season.complete = true;
       state.seasonTimer = null;
       state.seasonStatus.textContent = "Season complete";
-      renderSeason();
+      renderSeasonHeader();
+      renderSeasonFeed();
+      renderSeasonTable();
       return;
     }
 
     els.seasonFeed.insertAdjacentHTML("beforeend", renderSeasonMatch(next));
     state.season.revealed += 1;
     renderSeasonHeader();
-    state.seasonTimer = setTimeout(tick, 180);
+    state.seasonTimer = setTimeout(tick, 650);
   };
 
   tick();
@@ -835,6 +863,7 @@ function wireControls() {
   });
   on(els.rollTeam, "click", rollTeam);
   on(els.startSeason, "click", startSeason);
+  on(els.testSeason, "click", testSeason);
 
   on(els.homeFormation, "change", () => {
     state.formation = els.homeFormation.value;
