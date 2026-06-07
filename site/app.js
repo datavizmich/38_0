@@ -847,7 +847,7 @@ function animateSeason() {
     renderSeasonHeader();
 
     if (state.season.revealed >= state.season.userFixtures.length) {
-      state.seasonTimer = setTimeout(finishSeason, 750);
+      finishSeason();
       return;
     }
 
