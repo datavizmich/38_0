@@ -70,18 +70,30 @@ const FORMATION_LAYOUTS = {
   ],
 };
 
-const els = {
-  totalPlayers: document.querySelector("[data-total-players]"),
-  totalTeams: document.querySelector("[data-total-teams]"),
-  currentTeam: document.querySelector("[data-current-team]"),
-  formationSelect: document.querySelector("[data-formation]"),
-  rollTeam: document.querySelector("[data-roll-team]"),
-  rosterTitle: document.querySelector("[data-roster-title]"),
-  rosterSummary: document.querySelector("[data-roster-summary]"),
-  rosterGrid: document.querySelector("[data-roster-grid]"),
-  formationTitle: document.querySelector("[data-formation-title]"),
-  pitch: document.querySelector("[data-pitch]"),
-};
+let els = null;
+
+function bindElements() {
+  els = {
+    totalPlayers: document.querySelector("[data-total-players]"),
+    totalTeams: document.querySelector("[data-total-teams]"),
+    currentTeam: document.querySelector("[data-current-team]"),
+    formationSelect: document.querySelector("[data-formation]"),
+    rollTeam: document.querySelector("[data-roll-team]"),
+    rosterTitle: document.querySelector("[data-roster-title]"),
+    rosterSummary: document.querySelector("[data-roster-summary]"),
+    rosterGrid: document.querySelector("[data-roster-grid]"),
+    formationTitle: document.querySelector("[data-formation-title]"),
+    pitch: document.querySelector("[data-pitch]"),
+  };
+
+  const missing = Object.entries(els)
+    .filter(([, element]) => !element)
+    .map(([name]) => name);
+
+  if (missing.length) {
+    throw new Error(`Missing required DOM nodes: ${missing.join(", ")}`);
+  }
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -276,6 +288,12 @@ function rollTeam() {
 }
 
 async function init() {
+  if (document.readyState === "loading") {
+    await new Promise((resolve) => document.addEventListener("DOMContentLoaded", resolve, { once: true }));
+  }
+
+  bindElements();
+
   const response = await fetch("./data/premier-league-players.json");
   if (!response.ok) {
     throw new Error(`Failed to load player data: ${response.status}`);
