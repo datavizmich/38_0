@@ -62,6 +62,16 @@ body {
   padding: 2rem 0 3rem;
 }
 
+.view[hidden] {
+  display: none !important;
+}
+
+.home-view,
+.game-view {
+  display: grid;
+  gap: 1.5rem;
+}
+
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1.8fr) minmax(280px, 0.9fr);
@@ -117,6 +127,10 @@ select {
   border-radius: 1.25rem;
   display: grid;
   gap: 0.9rem;
+}
+
+.hero-home .hero-card {
+  align-self: stretch;
 }
 
 .stat {
@@ -197,6 +211,50 @@ button:focus-visible {
 
 .secondary {
   background: rgba(255, 255, 255, 0.42);
+}
+
+.config-panel {
+  max-width: 760px;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.play-button {
+  min-width: 220px;
+}
+
+.game-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.back-button {
+  background: rgba(255, 255, 255, 0.42);
+  padding: 0.7rem 1rem;
+}
+
+.game-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.game-meta span {
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.48);
+  border: 1px solid rgba(37, 43, 48, 0.08);
 }
 
 .content {
@@ -389,9 +447,13 @@ button:focus-visible {
   background: rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.24);
-  font-size: 1rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-align: center;
+  padding: 0.35rem;
+  word-break: break-word;
 }
 
 .roster-empty {
@@ -407,6 +469,10 @@ button:focus-visible {
 @media (max-width: 1080px) {
   .hero,
   .content {
+    grid-template-columns: 1fr;
+  }
+
+  .config-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -444,6 +510,6 @@ button:focus-visible {
   .slot-bubble {
     width: 3rem;
     height: 3rem;
-    font-size: 0.86rem;
+    font-size: 0.6rem;
   }
 }

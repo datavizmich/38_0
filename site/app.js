@@ -37,15 +37,6 @@ const POSITION_ORDER = {
   CF: 11,
 };
 
-const state = {
-  data: null,
-  teams: [],
-  currentTeam: null,
-  formation: "4-3-3",
-  lineup: new Map(),
-  selectedPlayerId: null,
-};
-
 const FORMATION_LAYOUTS = {
   "4-3-3": [
     { row: 5, col: 3 },
@@ -88,20 +79,39 @@ const FORMATION_LAYOUTS = {
   ],
 };
 
+const state = {
+  data: null,
+  teams: [],
+  view: "home",
+  formation: "4-3-3",
+  mode: "classic",
+  currentTeam: null,
+  lineup: new Map(),
+  selectedPlayerId: null,
+};
+
 let els = null;
 
 function bindElements() {
   els = {
     totalPlayers: document.querySelector("[data-total-players]"),
     totalTeams: document.querySelector("[data-total-teams]"),
+    homeView: document.querySelector("[data-home-view]"),
+    gameView: document.querySelector("[data-game-view]"),
+    homeFormation: document.querySelector("[data-home-formation]"),
+    homeMode: document.querySelector("[data-home-mode]"),
+    playGame: document.querySelector("[data-play-game]"),
+    backHome: document.querySelector("[data-back-home]"),
+    gameFormation: document.querySelector("[data-game-formation]"),
+    gameMode: document.querySelector("[data-game-mode]"),
     currentTeam: document.querySelector("[data-current-team]"),
-    formationSelect: document.querySelector("[data-formation]"),
-    rollTeam: document.querySelector("[data-roll-team]"),
+    currentFormation: document.querySelector("[data-current-formation]"),
     rosterTitle: document.querySelector("[data-roster-title]"),
     rosterSummary: document.querySelector("[data-roster-summary]"),
     rosterGrid: document.querySelector("[data-roster-grid]"),
     formationTitle: document.querySelector("[data-formation-title]"),
     pitch: document.querySelector("[data-pitch]"),
+    rollTeam: document.querySelector("[data-roll-team]"),
   };
 
   const missing = Object.entries(els)
@@ -164,17 +174,39 @@ function selectedPlayer() {
   return state.data.players.find((player) => player.id === state.selectedPlayerId) ?? null;
 }
 
+function getSurname(player) {
+  const parts = String(player.name).trim().split(/\s+/).filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : String(player.name);
+}
+
+function getPlayerBubbleLabel(player) {
+  return getSurname(player);
+}
+
 function renderStats() {
   els.totalPlayers.textContent = state.data.players.length.toLocaleString();
   els.totalTeams.textContent = state.teams.length.toString();
-  els.currentTeam.textContent = state.currentTeam ?? "Roll a team";
 }
 
-function renderFormationSelect() {
-  els.formationSelect.innerHTML = Object.keys(FORMATIONS)
+function renderHomeSetup() {
+  els.homeFormation.innerHTML = Object.keys(FORMATIONS)
     .map((name) => `<option value="${name}">${name}</option>`)
     .join("");
-  els.formationSelect.value = state.formation;
+  els.homeFormation.value = state.formation;
+  els.homeMode.value = state.mode;
+}
+
+function renderView() {
+  const home = state.view === "home";
+  els.homeView.hidden = !home;
+  els.gameView.hidden = home;
+  document.body.dataset.view = state.view;
+}
+
+function renderGameMeta() {
+  els.gameFormation.textContent = state.formation;
+  els.gameMode.textContent = state.mode === "classic" ? "Classic" : "Memory";
+  els.currentFormation.textContent = state.formation;
 }
 
 function renderRoster() {
@@ -243,7 +275,6 @@ function renderPitch() {
           const canAcceptSelected = selected ? playerCanPlaySlot(selected, slot) : false;
           const canBeClicked = Boolean(selected && canAcceptSelected);
           const layout = FORMATION_LAYOUTS[state.formation][index];
-          const bubble = lockedPlayer ? getPlayerBubbleLabel(lockedPlayer) : "";
           return `
             <button
               class="slot ${lockedPlayer ? "filled" : "empty"} ${canBeClicked ? "target" : ""}"
@@ -253,8 +284,7 @@ function renderPitch() {
               ${canBeClicked ? "" : "disabled"}
             >
               <span class="slot-label">${slot}</span>
-              <span class="slot-player">${lockedPlayer ? escapeHtml(lockedPlayer.name) : ""}</span>
-              ${lockedPlayer ? `<span class="slot-bubble" aria-hidden="true" title="${escapeHtml(lockedPlayer.name)}">${escapeHtml(bubble)}</span>` : ""}
+              ${lockedPlayer ? `<span class="slot-bubble" aria-hidden="true" title="${escapeHtml(lockedPlayer.name)}">${escapeHtml(getPlayerBubbleLabel(lockedPlayer))}</span>` : ""}
             </button>
           `;
         })
@@ -285,14 +315,11 @@ function renderPitch() {
   });
 }
 
-function getPlayerBubbleLabel(player) {
-  const parts = player.name.split(/\s+/).filter(Boolean);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
-
 function renderAll() {
   renderStats();
+  renderHomeSetup();
+  renderGameMeta();
+  renderView();
   renderRoster();
   renderPitch();
 }
@@ -302,6 +329,48 @@ function rollTeam() {
   state.currentTeam = state.teams[Math.floor(Math.random() * state.teams.length)];
   state.selectedPlayerId = null;
   renderAll();
+}
+
+function startGame() {
+  state.formation = els.homeFormation.value;
+  state.mode = els.homeMode.value;
+  state.view = "game";
+  state.currentTeam = null;
+  state.lineup.clear();
+  state.selectedPlayerId = null;
+  window.location.hash = "game";
+  renderAll();
+}
+
+function goHome() {
+  state.view = "home";
+  window.location.hash = "";
+  renderAll();
+}
+
+function wireHomeControls() {
+  els.playGame.addEventListener("click", startGame);
+  els.backHome.addEventListener("click", goHome);
+  els.rollTeam.addEventListener("click", rollTeam);
+
+  window.addEventListener("hashchange", () => {
+    if (window.location.hash === "#game") {
+      state.view = "game";
+    } else {
+      state.view = "home";
+    }
+    renderAll();
+  });
+
+  els.homeFormation.addEventListener("change", () => {
+    state.formation = els.homeFormation.value;
+    renderGameMeta();
+  });
+
+  els.homeMode.addEventListener("change", () => {
+    state.mode = els.homeMode.value;
+    renderGameMeta();
+  });
 }
 
 async function init() {
@@ -319,17 +388,13 @@ async function init() {
   state.data = await response.json();
   state.teams = [...new Set(state.data.players.map((player) => player.team))].sort((a, b) => a.localeCompare(b));
 
-  renderFormationSelect();
+  wireHomeControls();
+
+  if (window.location.hash === "#game") {
+    state.view = "game";
+  }
+
   renderAll();
-
-  els.formationSelect.addEventListener("change", () => {
-    state.formation = els.formationSelect.value;
-    state.lineup.clear();
-    state.selectedPlayerId = null;
-    renderAll();
-  });
-
-  els.rollTeam.addEventListener("click", rollTeam);
 }
 
 init().catch((error) => {

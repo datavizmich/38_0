@@ -2,10 +2,11 @@ A random Premier League football game, in the style of 7-0.
 
 ## Current flow
 
-1. Roll a Premier League team.
-2. Click one player in the roster on the left.
-3. Click a valid slot on the pitch to lock that player in.
-4. Reroll for the next player and keep building across teams.
+1. Open the homepage.
+2. Choose a formation and mode.
+3. Click play.
+4. Roll a Premier League team, click one player, then lock them to a valid slot.
+5. Reroll for the next player and keep building across teams.
 
 ## Starter flow
 
