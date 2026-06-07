@@ -288,7 +288,9 @@ button:focus-visible {
   flex: 1;
   overflow-y: auto;
   max-height: min(62vh, 760px);
-  padding-right: 0.3rem;
+  padding: 0 0.3rem 1rem 0;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
 }
 
 .season-match {

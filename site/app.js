@@ -768,7 +768,7 @@ function renderSeason() {
 function scrollSeasonFeedToBottom() {
   if (!els.seasonFeed) return;
   requestAnimationFrame(() => {
-    els.seasonFeed.scrollTop = els.seasonFeed.scrollHeight;
+    els.seasonFeed.scrollTop = Math.max(0, els.seasonFeed.scrollHeight - els.seasonFeed.clientHeight);
   });
 }
 
