@@ -1,3 +1,10 @@
 data/EAFC26-Men.csv
 __pycache__/
 *.pyc
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
