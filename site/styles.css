@@ -1,0 +1,352 @@
+:root {
+  color-scheme: dark;
+  --bg: #071018;
+  --bg-soft: rgba(10, 19, 29, 0.72);
+  --panel: rgba(12, 22, 34, 0.88);
+  --panel-border: rgba(179, 207, 255, 0.14);
+  --text: #edf4ff;
+  --muted: #91a7c0;
+  --accent: #61e294;
+  --accent-2: #79a6ff;
+  --accent-3: #ffd166;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(121, 166, 255, 0.18), transparent 33%),
+    radial-gradient(circle at 80% 10%, rgba(97, 226, 148, 0.16), transparent 28%),
+    linear-gradient(135deg, #050b12 0%, #09131e 45%, #07131b 100%);
+  overflow-x: hidden;
+}
+
+.bg-orb {
+  position: fixed;
+  inset: auto;
+  width: 28rem;
+  height: 28rem;
+  border-radius: 999px;
+  filter: blur(36px);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.orb-a {
+  top: -8rem;
+  left: -8rem;
+  background: rgba(97, 226, 148, 0.12);
+}
+
+.orb-b {
+  right: -10rem;
+  top: 16rem;
+  background: rgba(121, 166, 255, 0.1);
+}
+
+.shell {
+  width: min(1280px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(280px, 0.9fr);
+  gap: 1.5rem;
+  align-items: end;
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow,
+.panel-kicker {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+  margin: 0;
+  line-height: 1;
+}
+
+h1 {
+  max-width: 12ch;
+  font-size: clamp(3rem, 6vw, 5.6rem);
+}
+
+.lede {
+  max-width: 58ch;
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.hero-card,
+.panel,
+.control,
+button,
+select {
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+.hero-card {
+  padding: 1.1rem;
+  border-radius: 1.25rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.stat span,
+.panel-subtitle {
+  color: var(--muted);
+}
+
+.stat strong {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.15rem;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.control {
+  min-width: 180px;
+  padding: 0.85rem 1rem;
+  border-radius: 0.95rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.control span {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+select,
+button {
+  border-radius: 0.95rem;
+  color: var(--text);
+  font: inherit;
+}
+
+select {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  outline: none;
+}
+
+button {
+  cursor: pointer;
+  padding: 0.95rem 1.25rem;
+  font-weight: 700;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+button:hover,
+button:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.primary {
+  background: linear-gradient(135deg, rgba(97, 226, 148, 0.95), rgba(121, 166, 255, 0.9));
+  color: #04110a;
+}
+
+.secondary {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 1.5rem;
+}
+
+.panel {
+  border-radius: 1.35rem;
+  padding: 1.1rem;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.panel-header h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.35rem;
+}
+
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+}
+
+.player-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.9rem;
+}
+
+.player-card .topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.7rem;
+}
+
+.player-card .name {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.05rem;
+  margin-bottom: 0.3rem;
+}
+
+.meta,
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.chip {
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.chip.accent {
+  background: rgba(97, 226, 148, 0.14);
+  color: #92f0b8;
+}
+
+.chip.gold {
+  background: rgba(255, 209, 102, 0.14);
+  color: #ffdf93;
+}
+
+.pitch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.slot {
+  min-height: 130px;
+  border-radius: 1rem;
+  padding: 0.8rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+    radial-gradient(circle at top, rgba(97, 226, 148, 0.06), transparent 55%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.slot select {
+  background: rgba(6, 11, 17, 0.6);
+}
+
+.slot-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.slot .player {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.slot .detail {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.slot.empty {
+  opacity: 0.88;
+}
+
+@media (max-width: 1080px) {
+  .hero,
+  .content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .shell {
+    width: min(100vw - 1rem, 1280px);
+    padding-top: 1rem;
+  }
+
+  h1 {
+    max-width: none;
+    font-size: clamp(2.4rem, 11vw, 4rem);
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .pitch {
+    grid-template-columns: 1fr;
+  }
+}

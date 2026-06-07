@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bootleg 7-0</title>
+    <meta
+      name="description"
+      content="A Premier League squad builder inspired by 7-0, powered by EAFC26 ratings."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">EAFC26 Premier League builder</p>
+          <h1>Roll a club. Build a XI. Chase the highest-rated starting 11.</h1>
+          <p class="lede">
+            Start with a random Premier League team from the EAFC26 dataset and
+            lock players into a formation one slot at a time.
+          </p>
+        </div>
+        <div class="hero-card">
+          <div class="stat">
+            <span>Loaded players</span>
+            <strong data-total-players>0</strong>
+          </div>
+          <div class="stat">
+            <span>Premier League teams</span>
+            <strong data-total-teams>0</strong>
+          </div>
+          <div class="stat">
+            <span>Current club</span>
+            <strong data-current-team>Roll a team</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="controls">
+        <label class="control">
+          <span>Formation</span>
+          <select data-formation></select>
+        </label>
+        <button class="primary" data-roll-team>Roll Premier League Team</button>
+        <button class="secondary" data-randomize-lineup>Auto-fill best XI</button>
+      </section>
+
+      <section class="content">
+        <section class="panel roster-panel">
+          <div class="panel-header">
+            <div>
+              <p class="panel-kicker">Squad pool</p>
+              <h2 data-roster-title>No club rolled yet</h2>
+            </div>
+            <p class="panel-subtitle" data-roster-summary>
+              Roll a team to see the available players.
+            </p>
+          </div>
+          <div class="roster-grid" data-roster-grid></div>
+        </section>
+
+        <section class="panel pitch-panel">
+          <div class="panel-header">
+            <div>
+              <p class="panel-kicker">Formation board</p>
+              <h2 data-formation-title>4-3-3</h2>
+            </div>
+            <p class="panel-subtitle">Pick the best player for each slot.</p>
+          </div>
+          <div class="pitch" data-pitch></div>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>
