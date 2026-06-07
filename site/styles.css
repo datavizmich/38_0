@@ -270,22 +270,19 @@ button:focus-visible {
   align-items: stretch;
 }
 
-.season-feed,
-.season-table-wrap {
-  min-height: 100%;
-}
-
 .season-feed-panel,
 .season-table-panel {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 
 .season-feed {
   display: grid;
   gap: 0.55rem;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   max-height: min(62vh, 760px);
   padding: 0 0.2rem 0.5rem 0;
