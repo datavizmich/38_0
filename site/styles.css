@@ -275,27 +275,94 @@ button:focus-visible {
 }
 
 .pitch {
+  min-height: 760px;
+  padding: 1rem;
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(180deg, rgba(7, 26, 22, 0.92), rgba(5, 16, 24, 0.95)),
+    radial-gradient(circle at 50% 18%, rgba(97, 226, 148, 0.12), transparent 30%),
+    linear-gradient(90deg, transparent 49%, rgba(255, 255, 255, 0.08) 50%, transparent 51%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), var(--shadow);
+}
+
+.pitch-grid {
+  position: relative;
+  height: 100%;
+  min-height: 720px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(5, minmax(0, 1fr));
   gap: 0.85rem;
 }
 
+.pitch-grid::before,
+.pitch-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pitch-grid::before {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+}
+
+.pitch-grid::after {
+  inset: 25% 0 25% 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 .slot {
-  min-height: 130px;
+  min-height: 110px;
   border-radius: 1rem;
   padding: 0.8rem;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
-    radial-gradient(circle at top, rgba(97, 226, 148, 0.06), transparent 55%);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025)),
+    radial-gradient(circle at top, rgba(97, 226, 148, 0.1), transparent 60%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 0.75rem;
+  text-align: left;
+  color: var(--text);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
 }
 
-.slot select {
-  background: rgba(6, 11, 17, 0.6);
+.slot:hover:not(:disabled),
+.slot:focus-visible:not(:disabled) {
+  transform: translateY(-2px) scale(1.01);
+  border-color: rgba(121, 166, 255, 0.45);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.slot:disabled {
+  opacity: 0.56;
+  cursor: not-allowed;
+}
+
+.slot.empty {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+    radial-gradient(circle at top, rgba(121, 166, 255, 0.08), transparent 60%);
+}
+
+.slot.filled {
+  border-color: rgba(97, 226, 148, 0.35);
+}
+
+.slot.target {
+  border-color: rgba(255, 209, 102, 0.55);
+  background:
+    linear-gradient(180deg, rgba(255, 209, 102, 0.12), rgba(255, 255, 255, 0.025)),
+    radial-gradient(circle at top, rgba(255, 209, 102, 0.12), transparent 60%);
 }
 
 .slot-label {
@@ -319,8 +386,31 @@ button:focus-visible {
   font-size: 0.84rem;
 }
 
-.slot.empty {
-  opacity: 0.88;
+.player-card {
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.player-card:hover,
+.player-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(121, 166, 255, 0.42);
+}
+
+.player-card.selected {
+  border-color: rgba(97, 226, 148, 0.6);
+  background: rgba(97, 226, 148, 0.11);
+  box-shadow: 0 0 0 1px rgba(97, 226, 148, 0.25), var(--shadow);
+}
+
+.empty-card {
+  cursor: default;
 }
 
 @media (max-width: 1080px) {
@@ -347,6 +437,15 @@ button:focus-visible {
   }
 
   .pitch {
-    grid-template-columns: 1fr;
+    min-height: 620px;
+  }
+
+  .pitch-grid {
+    min-height: 580px;
+    gap: 0.6rem;
+  }
+
+  .slot {
+    min-height: 94px;
   }
 }

@@ -25,6 +25,49 @@ const state = {
   currentTeam: null,
   formation: "4-3-3",
   lineup: new Map(),
+  selectedPlayerId: null,
+};
+
+const FORMATION_LAYOUTS = {
+  "4-3-3": [
+    { row: 5, col: 3 },
+    { row: 4, col: 1 },
+    { row: 4, col: 2 },
+    { row: 4, col: 4 },
+    { row: 4, col: 5 },
+    { row: 3, col: 1 },
+    { row: 3, col: 3 },
+    { row: 3, col: 5 },
+    { row: 1, col: 1 },
+    { row: 1, col: 3 },
+    { row: 1, col: 5 },
+  ],
+  "4-2-3-1": [
+    { row: 5, col: 3 },
+    { row: 4, col: 1 },
+    { row: 4, col: 2 },
+    { row: 4, col: 4 },
+    { row: 4, col: 5 },
+    { row: 3, col: 2 },
+    { row: 3, col: 4 },
+    { row: 2, col: 3 },
+    { row: 2, col: 1 },
+    { row: 1, col: 3 },
+    { row: 2, col: 5 },
+  ],
+  "3-5-2": [
+    { row: 5, col: 3 },
+    { row: 4, col: 2 },
+    { row: 4, col: 3 },
+    { row: 4, col: 4 },
+    { row: 3, col: 1 },
+    { row: 3, col: 2 },
+    { row: 3, col: 3 },
+    { row: 3, col: 4 },
+    { row: 3, col: 5 },
+    { row: 1, col: 2 },
+    { row: 1, col: 4 },
+  ],
 };
 
 const els = {
@@ -33,7 +76,6 @@ const els = {
   currentTeam: document.querySelector("[data-current-team]"),
   formationSelect: document.querySelector("[data-formation]"),
   rollTeam: document.querySelector("[data-roll-team]"),
-  randomizeLineup: document.querySelector("[data-randomize-lineup]"),
   rosterTitle: document.querySelector("[data-roster-title]"),
   rosterSummary: document.querySelector("[data-roster-summary]"),
   rosterGrid: document.querySelector("[data-roster-grid]"),
@@ -61,13 +103,14 @@ function playerComparator(a, b) {
   return b.ovr - a.ovr || a.name.localeCompare(b.name);
 }
 
-function candidatesForSlot(players, slot, excludedIds = new Set()) {
+function playerCanPlaySlot(player, slot) {
   const aliases = POSITION_ALIASES[slot] || [slot];
-  const eligible = players.filter((player) => {
-    if (excludedIds.has(player.id)) return false;
-    const positions = normalizePositions(player);
-    return aliases.some((alias) => positions.has(alias));
-  });
+  const positions = normalizePositions(player);
+  return aliases.some((alias) => positions.has(alias));
+}
+
+function candidatesForSlot(players, slot, excludedIds = new Set()) {
+  const eligible = players.filter((player) => !excludedIds.has(player.id) && playerCanPlaySlot(player, slot));
   if (eligible.length) return [...eligible].sort(playerComparator);
 
   const unused = players.filter((player) => !excludedIds.has(player.id));
@@ -76,32 +119,17 @@ function candidatesForSlot(players, slot, excludedIds = new Set()) {
   return [...players].sort(playerComparator);
 }
 
-function bestPlayerForSlot(players, slot, excludedIds = new Set()) {
-  return candidatesForSlot(players, slot, excludedIds)[0] ?? null;
-}
-
-function resolveLineup(players) {
-  const resolved = new Map();
-  const usedIds = new Set();
-
-  FORMATIONS[state.formation].forEach((slot, index) => {
-    const explicit = state.lineup.get(index);
-    const selection = explicit ?? bestPlayerForSlot(players, slot, usedIds);
-    if (selection) {
-      resolved.set(index, selection);
-      usedIds.add(selection.id);
-    }
-  });
-
-  return resolved;
-}
-
 function explicitIdsExcluding(slotIndex) {
   return new Set(
     [...state.lineup.entries()]
       .filter(([index]) => index !== slotIndex)
       .map(([, player]) => player.id)
   );
+}
+
+function selectedPlayer() {
+  if (!state.selectedPlayerId) return null;
+  return state.data.players.find((player) => player.id === state.selectedPlayerId) ?? null;
 }
 
 function renderStats() {
@@ -119,16 +147,20 @@ function renderFormationSelect() {
 
 function renderRoster() {
   const players = state.currentTeam ? teamPlayers(state.currentTeam) : [];
+  const selected = selectedPlayer();
+
   els.rosterTitle.textContent = state.currentTeam ?? "No club rolled yet";
   els.rosterSummary.textContent = state.currentTeam
-    ? `${players.length} players available for this club.`
+    ? state.selectedPlayerId
+      ? `Selected: ${selected?.name ?? "Unknown"}. Click a valid position on the pitch to lock them in.`
+      : `${players.length} players available for this club. Click one to select it.`
     : "Roll a team to see the available players.";
 
   if (!players.length) {
     els.rosterGrid.innerHTML = `
-      <div class="player-card">
+      <div class="player-card empty-card">
         <div class="name">Ready to roll</div>
-        <div class="detail">The first team you roll will populate the roster and formation board.</div>
+        <div class="detail">The team you roll will appear here. Click a player to arm them for the pitch.</div>
       </div>
     `;
     return;
@@ -136,9 +168,10 @@ function renderRoster() {
 
   const ranked = [...players].sort(playerComparator);
   els.rosterGrid.innerHTML = ranked
-    .map(
-      (player) => `
-        <article class="player-card">
+    .map((player) => {
+      const isSelected = state.selectedPlayerId === player.id;
+      return `
+        <button class="player-card ${isSelected ? "selected" : ""}" data-player-id="${player.id}" type="button">
           <div class="topline">
             <div>
               <div class="name">${escapeHtml(player.name)}</div>
@@ -154,74 +187,76 @@ function renderRoster() {
             <span class="chip">${player.def ?? "-"} DEF</span>
             <span class="chip">${player.phy ?? "-"} PHY</span>
           </div>
-        </article>
-      `
-    )
-    .join("");
-}
-
-function renderPitch() {
-  const formation = FORMATIONS[state.formation];
-  const players = state.currentTeam ? teamPlayers(state.currentTeam) : [];
-  const resolved = resolveLineup(players);
-  els.formationTitle.textContent = state.formation;
-
-  els.pitch.innerHTML = formation
-    .map((slot, index) => {
-      const selected = resolved.get(index) ?? null;
-      const explicitValue = state.lineup.get(index) ? String(state.lineup.get(index).id) : "";
-      const usedIds = explicitIdsExcluding(index);
-      const options = candidatesForSlot(players, slot, usedIds);
-      const optionsMarkup = options
-        .map(
-          (player) => `
-            <option value="${player.id}" ${explicitValue === String(player.id) ? "selected" : ""}>
-              ${escapeHtml(player.name)} · ${player.ovr}
-            </option>
-          `
-        )
-        .join("");
-
-      return `
-        <div class="slot ${selected ? "" : "empty"}">
-          <div class="slot-label">
-            <span>${slot}</span>
-            <span>${index + 1}/${formation.length}</span>
-          </div>
-          <div>
-            <div class="player">${selected ? escapeHtml(selected.name) : "Unfilled"}</div>
-            <div class="detail">${selected ? `${escapeHtml(selected.position)} · ${selected.ovr} OVR` : "Select a player"}</div>
-          </div>
-          <select data-slot="${index}">
-            <option value="">Auto-best</option>
-            ${optionsMarkup}
-          </select>
-        </div>
+        </button>
       `;
     })
     .join("");
 
-  els.pitch.querySelectorAll("select[data-slot]").forEach((select) => {
-    const slotIndex = Number(select.dataset.slot);
-    select.value = state.lineup.has(slotIndex) ? String(state.lineup.get(slotIndex).id) : "";
-    select.addEventListener("change", () => {
-      if (!select.value) {
-        state.lineup.delete(slotIndex);
-        renderPitch();
-        return;
-      }
+  els.rosterGrid.querySelectorAll("[data-player-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const playerId = Number(button.dataset.playerId);
+      state.selectedPlayerId = state.selectedPlayerId === playerId ? null : playerId;
+      renderRoster();
+      renderPitch();
+    });
+  });
+}
 
-      const playersForTeam = state.currentTeam ? teamPlayers(state.currentTeam) : [];
-      const chosen = playersForTeam.find((player) => String(player.id) === select.value);
-      if (!chosen) return;
+function renderPitch() {
+  const formation = FORMATIONS[state.formation];
+  const selected = selectedPlayer();
 
-      for (const [otherIndex, player] of [...state.lineup.entries()]) {
-        if (otherIndex !== slotIndex && player.id === chosen.id) {
+  els.formationTitle.textContent = state.formation;
+
+  els.pitch.innerHTML = `
+    <div class="pitch-grid">
+      ${formation
+        .map((slot, index) => {
+          const lockedPlayer = state.lineup.get(index) ?? null;
+          const isExplicit = state.lineup.has(index);
+          const canAcceptSelected = selected ? playerCanPlaySlot(selected, slot) : false;
+          const canBeClicked = Boolean(selected && canAcceptSelected);
+          const layout = FORMATION_LAYOUTS[state.formation][index];
+          return `
+            <button
+              class="slot ${lockedPlayer ? "filled" : "empty"} ${canBeClicked ? "target" : ""}"
+              type="button"
+              data-slot-index="${index}"
+              style="grid-row: ${layout.row}; grid-column: ${layout.col};"
+              ${canBeClicked ? "" : "disabled"}
+            >
+              <div class="slot-label">
+                <span>${slot}</span>
+                <span>${index + 1}/${formation.length}</span>
+              </div>
+              <div class="player">${lockedPlayer ? escapeHtml(lockedPlayer.name) : "Empty slot"}</div>
+              <div class="detail">
+                ${lockedPlayer ? `${escapeHtml(lockedPlayer.position)} · ${lockedPlayer.ovr} OVR` : selected ? "Valid target" : "Select a player"}
+              </div>
+            </button>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+
+  els.pitch.querySelectorAll("[data-slot-index]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const slotIndex = Number(button.dataset.slotIndex);
+      const slot = FORMATIONS[state.formation][slotIndex];
+      const player = selectedPlayer();
+      if (!player) return;
+      if (!playerCanPlaySlot(player, slot)) return;
+
+      for (const [otherIndex, otherPlayer] of [...state.lineup.entries()]) {
+        if (otherPlayer.id === player.id || otherIndex === slotIndex) {
           state.lineup.delete(otherIndex);
         }
       }
 
-      state.lineup.set(slotIndex, chosen);
+      state.lineup.set(slotIndex, player);
+      state.selectedPlayerId = null;
+      renderRoster();
       renderPitch();
     });
   });
@@ -236,26 +271,8 @@ function renderAll() {
 function rollTeam() {
   if (!state.teams.length) return;
   state.currentTeam = state.teams[Math.floor(Math.random() * state.teams.length)];
-  state.lineup.clear();
+  state.selectedPlayerId = null;
   renderAll();
-}
-
-function autoFillLineup() {
-  if (!state.currentTeam) return;
-  const players = teamPlayers(state.currentTeam);
-  const filled = new Map();
-  const usedIds = new Set();
-
-  FORMATIONS[state.formation].forEach((slot, index) => {
-    const best = bestPlayerForSlot(players, slot, usedIds);
-    if (best) {
-      filled.set(index, best);
-      usedIds.add(best.id);
-    }
-  });
-
-  state.lineup = filled;
-  renderPitch();
 }
 
 async function init() {
@@ -273,11 +290,11 @@ async function init() {
   els.formationSelect.addEventListener("change", () => {
     state.formation = els.formationSelect.value;
     state.lineup.clear();
+    state.selectedPlayerId = null;
     renderAll();
   });
 
   els.rollTeam.addEventListener("click", rollTeam);
-  els.randomizeLineup.addEventListener("click", autoFillLineup);
 }
 
 init().catch((error) => {

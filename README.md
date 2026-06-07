@@ -1,5 +1,12 @@
 A random Premier League football game, in the style of 7-0.
 
+## Current flow
+
+1. Roll a Premier League team.
+2. Click a player in the roster on the left.
+3. Click a valid slot on the pitch to lock that player in.
+4. Roll another team and keep building.
+
 ## Starter flow
 
 1. Build the filtered data set:
