@@ -104,6 +104,7 @@
 
         <section class="controls">
           <button class="primary" data-roll-team>Roll Premier League Team</button>
+          <button class="secondary" data-start-season hidden>Start the season</button>
         </section>
 
         <section class="content">
@@ -130,6 +131,63 @@
             </div>
             <div class="pitch" data-pitch></div>
           </section>
+        </section>
+      </section>
+
+      <section class="view season-view" data-season-view hidden>
+        <header class="game-topbar">
+          <button class="back-button" data-season-back type="button">Back to squad</button>
+          <div class="game-meta">
+            <span data-season-fixtures>0 / 38 fixtures</span>
+            <span data-season-status>Season ready</span>
+          </div>
+        </header>
+
+        <header class="hero hero-season">
+          <div>
+            <p class="eyebrow">Season simulation</p>
+            <h1>Watch the full league unfold.</h1>
+            <p class="lede">
+              Your XI is placed into a randomly generated Premier League season and each of
+              your matches appears one at a time before the final table is shown.
+            </p>
+          </div>
+          <div class="hero-card">
+            <div class="stat">
+              <span>Your team</span>
+              <strong data-season-team-name>38-0 XI</strong>
+            </div>
+            <div class="stat">
+              <span>Matches played</span>
+              <strong data-season-progress>0 / 38</strong>
+            </div>
+          </div>
+        </header>
+
+        <section class="season-layout">
+          <article class="panel season-feed-panel">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Live feed</p>
+                <h2>Fixtures for your team</h2>
+              </div>
+              <p class="panel-subtitle">Results appear one at a time.</p>
+            </div>
+            <div class="season-feed" data-season-feed></div>
+          </article>
+
+          <article class="panel season-table-panel">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">League table</p>
+                <h2>Final standings</h2>
+              </div>
+              <p class="panel-subtitle">Revealed after the full simulation.</p>
+            </div>
+            <div class="season-table-wrap" data-season-table-wrap>
+              <div class="season-placeholder">The table will appear when the season finishes.</div>
+            </div>
+          </article>
         </section>
       </section>
     </main>

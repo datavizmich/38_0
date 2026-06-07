@@ -7,6 +7,7 @@ A random Premier League football game, in the style of 7-0.
 3. Click play.
 4. Roll a Premier League team, click one player, then lock them to a valid slot.
 5. Reroll for the next player and keep building across teams.
+6. Once the XI is complete, start the season and watch the full league simulation.
 
 ## Starter flow
 
