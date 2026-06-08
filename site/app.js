@@ -1111,15 +1111,8 @@ async function downloadShareImage() {
 }
 
 async function postShareResult() {
-  const asset = await generateShareImage();
-  if (!asset) return;
   const text = formatShareText();
-  const file = new File([asset.blob], "scotland-38-0-result.png", { type: "image/png" });
-  if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
-    await navigator.share({ title: "Scotland-38-0", text, files: [file] });
-    return;
-  }
-  const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+  const intentUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
   window.open(intentUrl, "_blank", "noopener,noreferrer");
 }
 
