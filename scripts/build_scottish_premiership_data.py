@@ -112,60 +112,7 @@ def team_label(season_code: str, team: str) -> str:
 
 
 def derive_fc25_ratings(row: dict[str, str]) -> dict[str, int | None]:
-    pace = parse_int(row.get("Pace", ""))
-    shooting = parse_int(row.get("Shooting", ""))
-    passing = parse_int(row.get("Passing", ""))
-    dribbling = parse_int(row.get("Dribbling", ""))
-    defending = parse_int(row.get("Defending", ""))
-    physicality = parse_int(row.get("Physicality", ""))
-
-    base = {
-        "ovr": None if any(value is None for value in [pace, shooting, passing, dribbling, defending, physicality]) else round_half_up((pace + shooting + passing + dribbling + defending + physicality) / 6),
-        "pac": pace,
-        "sho": shooting,
-        "pas": passing,
-        "dri": dribbling,
-        "def": defending,
-        "phy": physicality,
-        "acceleration": pace,
-        "sprintSpeed": pace,
-        "positioning": shooting,
-        "finishing": shooting,
-        "shotPower": shooting,
-        "longShots": shooting,
-        "volleys": shooting,
-        "penalties": shooting,
-        "vision": passing,
-        "crossing": passing,
-        "freeKickAccuracy": passing,
-        "shortPassing": passing,
-        "longPassing": passing,
-        "curve": passing,
-        "dribbling": dribbling,
-        "agility": dribbling,
-        "balance": dribbling,
-        "reactions": dribbling,
-        "ballControl": dribbling,
-        "composure": dribbling,
-        "interceptions": defending,
-        "headingAccuracy": defending,
-        "defAwareness": defending,
-        "standingTackle": defending,
-        "slidingTackle": defending,
-        "jumping": physicality,
-        "stamina": physicality,
-        "strength": physicality,
-        "aggression": physicality,
-    }
-
-    gk_value = None
-    if all(value is not None for value in [defending, physicality, pace]):
-        gk_value = round_half_up((defending + physicality + pace) / 3)
-
-    for field in ["gkDiving", "gkHandling", "gkKicking", "gkPositioning", "gkReflexes"]:
-        base[field] = gk_value
-
-    return base
+    return derive_eafc26_ratings(row)
 
 
 def derive_eafc26_ratings(row: dict[str, str]) -> dict[str, int | None]:
@@ -280,7 +227,7 @@ def main() -> None:
             normalized[field] = scale_rating(player.get(field), minima[field], maxima[field])
         players.append(normalized)
 
-    players.sort(key=lambda player: (player["season"], player["teamLabel"], -player["ovr"], player["name"]))
+    players.sort(key=lambda player: (player["season"], player["teamLabel"], -(player.get("ovr") or -1), player["name"]))
 
     payload = {
         "source": [spec[1].name for spec in SOURCE_SPECS],
