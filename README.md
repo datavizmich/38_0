@@ -5,13 +5,13 @@ A random Scottish Premiership football game, in the style of 7-0.
 1. Open the homepage.
 2. Choose a formation and mode.
 3. Click play.
-4. Roll a Scottish Premiership team, click one player, then lock them to a valid slot.
+4. Roll a Scottish Premiership club-year, click one player, then lock them to a valid slot.
 5. Reroll for the next player and keep building across teams.
 6. Once the XI is complete, start the season and watch the 33-game phase, the split, and the final table.
 
 ## Starter flow
 
-1. Build the filtered data set:
+1. Build the filtered data set from `data/EAFC26-Men.csv` and `data/fc25.csv`:
 
 ```bash
 python3 scripts/build_scottish_premiership_data.py
@@ -24,7 +24,7 @@ cd site
 python3 -m http.server 4173
 ```
 
-The site loads the Scottish Premiership-only player JSON from `site/data/scottish-premiership-players.json`.
+The site loads the combined Scottish Premiership player JSON from `site/data/scottish-premiership-players.json`.
 
 ## Cloudflare Pages deployment
 
@@ -38,7 +38,7 @@ Use these Cloudflare Pages settings:
 
 Because `site/data/scottish-premiership-players.json` is committed, Cloudflare can publish the site without running the local Python data build during deploy.
 
-If you change `data/EAFC26-Men.csv`, regenerate the filtered JSON locally before pushing:
+If you change `data/EAFC26-Men.csv` or `data/fc25.csv`, regenerate the filtered JSON locally before pushing:
 
 ```bash
 python3 scripts/build_scottish_premiership_data.py

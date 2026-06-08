@@ -90,6 +90,7 @@ const DC_RHO = -0.08;
 const state = {
   data: null,
   teams: [],
+  seasons: [],
   view: "home",
   formation: "4-3-3",
   mode: "classic",
@@ -156,7 +157,25 @@ function normalizePositions(player) {
 }
 
 function teamPlayers(team) {
-  return state.data.players.filter((player) => player.team === team);
+  const teamKey = typeof team === "string" ? team : team?.teamKey ?? team?.key ?? team?.label ?? team?.team ?? team?.name;
+  return state.data.players.filter((player) => player.teamKey === teamKey);
+}
+
+function teamLabel(team) {
+  return team?.teamLabel ?? team?.label ?? team?.name ?? String(team ?? "");
+}
+
+function randomChoice(values) {
+  if (!values.length) return null;
+  return values[Math.floor(Math.random() * values.length)];
+}
+
+function randomTeamForSeason(season) {
+  return randomChoice(state.teams.filter((team) => team.season === season));
+}
+
+function currentTeamLabel() {
+  return state.currentTeam ? teamLabel(state.currentTeam) : "Roll a team";
 }
 
 function positionRank(position) {
@@ -269,13 +288,16 @@ function buildBestLineup(players, formation = state.formation) {
 }
 
 function buildOpponentTeams() {
-  const teamNames = shuffle([...new Set(state.teams)]).slice(0, 11);
-  return teamNames.map((name) => {
-    const players = teamPlayers(name);
+  const teamOptions = shuffle([...state.teams]).slice(0, 11);
+  return teamOptions.map((team) => {
+    const players = teamPlayers(team);
     const lineup = buildBestLineup(players);
     const strength = teamStrengthFromLineup(lineup);
     return {
-      name,
+      key: team.teamKey,
+      name: team.teamLabel,
+      season: team.season,
+      team: team.team,
       lineup,
       attack: strength.attack,
       defense: strength.defense,
@@ -289,6 +311,7 @@ function buildUserTeam() {
   const lineup = orderedLineupFromMap(state.lineup);
   const strength = teamStrengthFromLineup(lineup);
   return {
+    key: TEAM_NAME,
     name: TEAM_NAME,
     lineup,
     attack: strength.attack,
@@ -421,7 +444,8 @@ function expectedGoals(homeTeam, awayTeam) {
 function initializeTable(teams) {
   const table = new Map();
   teams.forEach((team) => {
-    table.set(team.name, {
+    table.set(team.key, {
+      key: team.key,
       team: team.name,
       played: 0,
       wins: 0,
@@ -480,15 +504,16 @@ function buildSeason() {
 
   const opponentTeams = buildOpponentTeams();
   const teams = shuffle([userTeam, ...opponentTeams]);
-  const firstPhaseSchedule = generateScottishPremPhaseOne(teams.map((team) => team.name));
-  const teamByName = new Map(teams.map((team) => [team.name, team]));
+  const firstPhaseSchedule = generateScottishPremPhaseOne(teams.map((team) => team.key));
+  const teamByKey = new Map(teams.map((team) => [team.key, team]));
   const table = initializeTable(teams);
   const fixtures = [];
+  const teamNameByKey = Object.fromEntries(teams.map((team) => [team.key, team.name]));
 
   firstPhaseSchedule.forEach((roundMatches, roundIndex) => {
     roundMatches.forEach((match) => {
-      const homeTeam = teamByName.get(match.home);
-      const awayTeam = teamByName.get(match.away);
+      const homeTeam = teamByKey.get(match.home);
+      const awayTeam = teamByKey.get(match.away);
       const { homeLambda, awayLambda } = expectedGoals(homeTeam, awayTeam);
       const score = sampleScoreline(homeLambda, awayLambda);
       const fixture = {
@@ -504,14 +529,14 @@ function buildSeason() {
   });
 
   const phaseOneTable = sortTableRows(table.values());
-  const topSix = phaseOneTable.slice(0, 6).map((row) => row.team);
-  const bottomSix = phaseOneTable.slice(6, 12).map((row) => row.team);
+  const topSix = phaseOneTable.slice(0, 6).map((row) => row.key);
+  const bottomSix = phaseOneTable.slice(6, 12).map((row) => row.key);
   const splitSchedule = generateSplitSchedule(topSix, bottomSix);
 
   splitSchedule.forEach((roundMatches, roundIndex) => {
     roundMatches.forEach((match) => {
-      const homeTeam = teamByName.get(match.home);
-      const awayTeam = teamByName.get(match.away);
+      const homeTeam = teamByKey.get(match.home);
+      const awayTeam = teamByKey.get(match.away);
       const { homeLambda, awayLambda } = expectedGoals(homeTeam, awayTeam);
       const score = sampleScoreline(homeLambda, awayLambda);
       const fixture = {
@@ -538,11 +563,16 @@ function buildSeason() {
     complete: false,
     teamName: TEAM_NAME,
     splitRound: PHASE_ONE_ROUNDS,
+    teamNameByKey,
   };
 }
 
 function buildPresetSeasonTeam() {
-  const preferredTeam = state.teams.find((team) => team.toLowerCase() === "celtic") ?? state.teams[0];
+  const latestSeason = state.seasons[state.seasons.length - 1] ?? null;
+  const preferredTeam =
+    state.teams.find((team) => team.season === latestSeason && team.team === "Celtic") ??
+    state.teams.find((team) => team.season === latestSeason) ??
+    state.teams[0];
   if (!preferredTeam) return false;
 
   state.currentTeam = preferredTeam;
@@ -589,13 +619,14 @@ function renderGameMeta() {
   els.startSeason.hidden = !lineUpIsComplete() || state.view !== "game";
   els.rollTeam.disabled = lineUpIsComplete();
   els.testSeason.disabled = state.view !== "home" && state.view !== "game";
+  els.currentTeam.textContent = currentTeamLabel();
 }
 
 function renderRoster() {
   const players = state.currentTeam ? teamPlayers(state.currentTeam) : [];
   const selected = selectedPlayer();
 
-  els.rosterTitle.textContent = state.currentTeam ?? "No club rolled yet";
+  els.rosterTitle.textContent = state.currentTeam ? teamLabel(state.currentTeam) : "No club rolled yet";
   els.rosterSummary.textContent = state.currentTeam
     ? state.selectedPlayerId
       ? `Selected: ${selected?.name ?? "Unknown"}. Lock them, then reroll for the next player.`
@@ -766,15 +797,16 @@ function renderSeasonMatch(match) {
       : (userHome && match.homeGoals > match.awayGoals) || (!userHome && match.awayGoals > match.homeGoals)
         ? "win"
         : "loss";
-  const opponent = userHome ? match.away : match.home;
+  const opponentKey = userHome ? match.away : match.home;
+  const opponentName = state.season.teamNameByKey[opponentKey] ?? opponentKey;
   const score = `${match.homeGoals}-${match.awayGoals}`;
   return `
     <article class="season-match ${resultClass}">
       <div class="season-match-meta">Round ${match.round} · ${userHome ? "Home" : "Away"}</div>
       <div class="season-match-row">
-        <span class="season-match-team">${userHome ? "You" : escapeHtml(opponent)}</span>
+        <span class="season-match-team">${userHome ? "You" : escapeHtml(opponentName)}</span>
         <strong class="season-match-score">${escapeHtml(score)}</strong>
-        <span class="season-match-team">${userHome ? escapeHtml(opponent) : "You"}</span>
+        <span class="season-match-team">${userHome ? escapeHtml(opponentName) : "You"}</span>
       </div>
     </article>
   `;
@@ -870,7 +902,8 @@ function clearSeasonTimer() {
 
 function rollTeam() {
   if (!state.teams.length || lineUpIsComplete()) return;
-  state.currentTeam = state.teams[Math.floor(Math.random() * state.teams.length)];
+  const season = randomChoice(state.seasons);
+  state.currentTeam = randomTeamForSeason(season) ?? randomChoice(state.teams);
   state.selectedPlayerId = null;
   renderGame();
 }
@@ -999,7 +1032,23 @@ async function init() {
   }
 
   state.data = await response.json();
-  state.teams = [...new Set(state.data.players.map((player) => player.team))].sort((a, b) => a.localeCompare(b));
+  state.teams = [];
+  state.seasons = [...new Set(state.data.players.map((player) => player.season))].sort((a, b) => a.localeCompare(b));
+  const teamMap = new Map();
+  state.data.players.forEach((player) => {
+    if (!teamMap.has(player.teamKey)) {
+      teamMap.set(player.teamKey, {
+        key: player.teamKey,
+        team: player.team,
+        name: player.teamLabel,
+        label: player.teamLabel,
+        teamKey: player.teamKey,
+        teamLabel: player.teamLabel,
+        season: player.season,
+      });
+    }
+  });
+  state.teams = [...teamMap.values()].sort((a, b) => a.name.localeCompare(b.name));
 
   wireControls();
 
