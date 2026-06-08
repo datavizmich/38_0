@@ -211,6 +211,11 @@ function currentTeamLabel() {
   return state.currentTeam ? teamLabel(state.currentTeam) : "Roll a team";
 }
 
+function playerMetaLabel(player) {
+  const rating = state.mode === "memory" ? "??" : player.ovr;
+  return `${player.position} · ${rating}`;
+}
+
 function positionRank(position) {
   return POSITION_ORDER[position] ?? 99;
 }
@@ -704,7 +709,7 @@ function renderRoster() {
           title="${unavailable ? "No open slot for this player in the current formation" : ""}"
         >
           <span class="player-name">${escapeHtml(player.name)}</span>
-          <span class="player-meta">${escapeHtml(player.position)} · ${player.ovr}</span>
+          <span class="player-meta">${escapeHtml(playerMetaLabel(player))}</span>
         </button>
       `;
     })
