@@ -11,7 +11,7 @@ A random Scottish Premiership football game, in the style of 7-0.
 
 ## Starter flow
 
-1. Build the filtered data set from `data/EAFC26-Men.csv` and `data/fc25.csv`:
+1. Build the filtered data set from `data/EAFC26-Men.csv`, `data/fc25.csv`, `data/fc24.csv`, and `data/fc_prev.csv`:
 
 ```bash
 python3 scripts/build_scottish_premiership_data.py
@@ -38,7 +38,7 @@ Use these Cloudflare Pages settings:
 
 Because `site/data/scottish-premiership-players.json` is committed, Cloudflare can publish the site without running the local Python data build during deploy.
 
-If you change `data/EAFC26-Men.csv` or `data/fc25.csv`, regenerate the filtered JSON locally before pushing:
+If you change any of `data/EAFC26-Men.csv`, `data/fc25.csv`, `data/fc24.csv`, or `data/fc_prev.csv`, regenerate the filtered JSON locally before pushing:
 
 ```bash
 python3 scripts/build_scottish_premiership_data.py

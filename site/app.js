@@ -170,6 +170,11 @@ function randomChoice(values) {
   return values[Math.floor(Math.random() * values.length)];
 }
 
+function seasonSortValue(season) {
+  const digits = String(season).match(/\d+/);
+  return digits ? Number(digits[0]) : Number.POSITIVE_INFINITY;
+}
+
 function randomTeamForSeason(season) {
   return randomChoice(state.teams.filter((team) => team.season === season));
 }
@@ -674,7 +679,7 @@ function renderRoster() {
 
   els.rosterGrid.querySelectorAll("[data-player-id]").forEach((button) => {
     button.addEventListener("click", () => {
-      const playerId = Number(button.dataset.playerId);
+      const playerId = button.dataset.playerId;
       state.selectedPlayerId = state.selectedPlayerId === playerId ? null : playerId;
       renderRoster();
       renderPitch();
@@ -1033,7 +1038,9 @@ async function init() {
 
   state.data = await response.json();
   state.teams = [];
-  state.seasons = [...new Set(state.data.players.map((player) => player.season))].sort((a, b) => a.localeCompare(b));
+  state.seasons = [...new Set(state.data.players.map((player) => player.season))].sort(
+    (a, b) => seasonSortValue(a) - seasonSortValue(b) || String(a).localeCompare(String(b)),
+  );
   const teamMap = new Map();
   state.data.players.forEach((player) => {
     if (!teamMap.has(player.teamKey)) {
