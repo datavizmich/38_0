@@ -102,8 +102,6 @@ const TEAM_THEMES = {
   "St Mirren": { accent: "#38414a", soft: "rgba(56, 65, 74, 0.18)" },
   "St Johnstone": { accent: "#2f6b3e", soft: "rgba(47, 107, 62, 0.18)" },
 };
-const FEEDBACK_EMAIL = "datavizmich@outlook.com";
-
 const state = {
   data: null,
   teams: [],
@@ -153,12 +151,6 @@ function bindElements() {
     seasonActions: document.querySelector("[data-season-actions]"),
     playAgain: document.querySelector("[data-play-again]"),
     shareResult: document.querySelector("[data-share-result]"),
-    openFeedbackButtons: document.querySelectorAll("[data-open-feedback]"),
-    feedbackModal: document.querySelector("[data-feedback-modal]"),
-    feedbackForm: document.querySelector("[data-feedback-form]"),
-    feedbackText: document.querySelector("[data-feedback-text]"),
-    sendFeedback: document.querySelector("[data-send-feedback]"),
-    closeFeedbackButtons: document.querySelectorAll("[data-close-feedback]"),
     shareModal: document.querySelector("[data-share-modal]"),
     sharePreview: document.querySelector("[data-share-preview]"),
     closeShareButtons: document.querySelectorAll("[data-close-share]"),
@@ -1116,19 +1108,6 @@ async function postShareResult() {
   window.open(intentUrl, "_blank", "noopener,noreferrer");
 }
 
-function openFeedback() {
-  openDialog(els.feedbackModal);
-  els.feedbackText.value = els.feedbackText.value || "";
-  els.feedbackText.focus();
-}
-
-function sendFeedbackEmail() {
-  const body = encodeURIComponent(els.feedbackText.value.trim() || "Feedback for Scotland-38-0:");
-  const subject = encodeURIComponent("Scotland-38-0 feedback");
-  const href = `mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`;
-  window.location.href = href;
-}
-
 function renderSeason() {
   renderSeasonHeader();
   renderSeasonFeed();
@@ -1272,12 +1251,6 @@ function wireControls() {
   on(els.testSeason, "click", testSeason);
   on(els.downloadShare, "click", downloadShareImage);
   on(els.postShare, "click", postShareResult);
-  on(els.sendFeedback, "click", sendFeedbackEmail);
-
-  els.openFeedbackButtons.forEach((button) => on(button, "click", openFeedback));
-  els.closeFeedbackButtons.forEach((button) =>
-    on(button, "click", () => closeDialog(els.feedbackModal)),
-  );
   els.closeShareButtons.forEach((button) => on(button, "click", () => closeDialog(els.shareModal)));
 
   on(els.homeFormation, "change", () => {

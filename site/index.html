@@ -69,9 +69,6 @@
           </div>
 
           <button class="primary play-button" data-play-game>Play Game</button>
-          <button class="secondary play-button feedback-button" data-open-feedback type="button">
-            Feedback
-          </button>
         </section>
       </section>
 
@@ -209,42 +206,14 @@
           </div>
         </section>
 
-        <button class="feedback-fab" data-open-feedback type="button">Feedback</button>
       </section>
 
       <footer class="brand-footer" aria-label="Scotland 38-0 branding">
         <span>--------------</span>
         <strong>Scotland-38-0</strong>
         <span>--------------</span>
-        <button class="secondary footer-feedback" data-open-feedback type="button">Feedback</button>
       </footer>
     </main>
-
-    <dialog class="modal" data-feedback-modal>
-      <form class="modal-card" data-feedback-form method="dialog">
-        <div class="panel-header">
-          <div>
-            <p class="panel-kicker">Feedback</p>
-            <h2>Send a note</h2>
-          </div>
-          <button class="back-button" data-close-feedback type="button">Close</button>
-        </div>
-
-        <p class="panel-subtitle">
-          This opens your mail app with the message prefilled to <strong>datavizmich@outlook.com</strong>.
-        </p>
-
-        <label class="control feedback-control">
-          <span>Your comments</span>
-          <textarea data-feedback-text rows="6" placeholder="What should change next?"></textarea>
-        </label>
-
-        <div class="controls modal-actions">
-          <button class="primary" data-send-feedback type="button">Open email</button>
-          <button class="secondary" data-close-feedback type="button">Cancel</button>
-        </div>
-      </form>
-    </dialog>
 
     <dialog class="modal" data-share-modal>
       <div class="modal-card share-card">
