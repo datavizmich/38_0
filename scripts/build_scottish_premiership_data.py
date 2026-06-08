@@ -16,6 +16,50 @@ TEAM_RENAMES = {
     "St. Mirren": "St Mirren",
 }
 
+RATING_FIELDS = [
+    ("ovr", "OVR"),
+    ("pac", "PAC"),
+    ("sho", "SHO"),
+    ("pas", "PAS"),
+    ("dri", "DRI"),
+    ("def", "DEF"),
+    ("phy", "PHY"),
+    ("acceleration", "Acceleration"),
+    ("sprintSpeed", "Sprint Speed"),
+    ("positioning", "Positioning"),
+    ("finishing", "Finishing"),
+    ("shotPower", "Shot Power"),
+    ("longShots", "Long Shots"),
+    ("volleys", "Volleys"),
+    ("penalties", "Penalties"),
+    ("vision", "Vision"),
+    ("crossing", "Crossing"),
+    ("freeKickAccuracy", "Free Kick Accuracy"),
+    ("shortPassing", "Short Passing"),
+    ("longPassing", "Long Passing"),
+    ("curve", "Curve"),
+    ("dribbling", "Dribbling"),
+    ("agility", "Agility"),
+    ("balance", "Balance"),
+    ("reactions", "Reactions"),
+    ("ballControl", "Ball Control"),
+    ("composure", "Composure"),
+    ("interceptions", "Interceptions"),
+    ("headingAccuracy", "Heading Accuracy"),
+    ("defAwareness", "Def Awareness"),
+    ("standingTackle", "Standing Tackle"),
+    ("slidingTackle", "Sliding Tackle"),
+    ("jumping", "Jumping"),
+    ("stamina", "Stamina"),
+    ("strength", "Strength"),
+    ("aggression", "Aggression"),
+    ("gkDiving", "GK Diving"),
+    ("gkHandling", "GK Handling"),
+    ("gkKicking", "GK Kicking"),
+    ("gkPositioning", "GK Positioning"),
+    ("gkReflexes", "GK Reflexes"),
+]
+
 
 def parse_alt_positions(value: str) -> list[str]:
     if not value:
@@ -38,15 +82,25 @@ def parse_int(value: str):
         return value
 
 
+def scale_rating(value: int | float | None, minimum: int | float | None, maximum: int | float | None) -> int | None:
+    if value is None or minimum is None or maximum is None:
+        return None
+    if maximum == minimum:
+        return 99
+    scaled = 50 + ((value - minimum) / (maximum - minimum)) * 49
+    return int(round(scaled))
+
+
 def main() -> None:
     if not SOURCE.exists():
         raise SystemExit(f"Missing source file: {SOURCE}")
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
 
+    raw_players = []
+
     with SOURCE.open(newline="", encoding="utf-8-sig") as fh:
         reader = csv.DictReader(fh)
-        players = []
 
         for row in reader:
             if row.get("League") != "Scottish Prem":
@@ -54,31 +108,41 @@ def main() -> None:
 
             team = TEAM_RENAMES.get(row.get("Team", ""), row.get("Team", ""))
 
-            players.append(
-                {
-                    "id": parse_int(row.get("ID", "")),
-                    "rank": parse_int(row.get("Rank", "")),
-                    "name": row.get("Name", ""),
-                    "team": team,
-                    "league": "Scottish Premiership",
-                    "nation": row.get("Nation", ""),
-                    "position": row.get("Position", ""),
-                    "altPositions": parse_alt_positions(row.get("Alternative positions", "")),
-                    "age": parse_int(row.get("Age", "")),
-                    "ovr": parse_int(row.get("OVR", "")),
-                    "pac": parse_int(row.get("PAC", "")),
-                    "sho": parse_int(row.get("SHO", "")),
-                    "pas": parse_int(row.get("PAS", "")),
-                    "dri": parse_int(row.get("DRI", "")),
-                    "def": parse_int(row.get("DEF", "")),
-                    "phy": parse_int(row.get("PHY", "")),
-                    "weakFoot": parse_int(row.get("Weak foot", "")),
-                    "skillMoves": parse_int(row.get("Skill moves", "")),
-                    "preferredFoot": row.get("Preferred foot", ""),
-                    "card": row.get("card", ""),
-                    "url": row.get("url", ""),
-                }
-            )
+            raw_player = {
+                "id": parse_int(row.get("ID", "")),
+                "rank": parse_int(row.get("Rank", "")),
+                "name": row.get("Name", ""),
+                "team": team,
+                "league": "Scottish Premiership",
+                "nation": row.get("Nation", ""),
+                "position": row.get("Position", ""),
+                "altPositions": parse_alt_positions(row.get("Alternative positions", "")),
+                "age": parse_int(row.get("Age", "")),
+                "weakFoot": parse_int(row.get("Weak foot", "")),
+                "skillMoves": parse_int(row.get("Skill moves", "")),
+                "preferredFoot": row.get("Preferred foot", ""),
+                "card": row.get("card", ""),
+                "url": row.get("url", ""),
+            }
+
+            for output_key, source_key in RATING_FIELDS:
+                raw_player[output_key] = parse_int(row.get(source_key, ""))
+
+            raw_players.append(raw_player)
+
+    minima = {}
+    maxima = {}
+    for output_key, _ in RATING_FIELDS:
+        values = [player[output_key] for player in raw_players if player[output_key] is not None]
+        minima[output_key] = min(values) if values else None
+        maxima[output_key] = max(values) if values else None
+
+    players = []
+    for player in raw_players:
+        normalized = dict(player)
+        for output_key, _ in RATING_FIELDS:
+            normalized[output_key] = scale_rating(player[output_key], minima[output_key], maxima[output_key])
+        players.append(normalized)
 
     players.sort(key=lambda player: (-player["ovr"], player["name"]))
 
