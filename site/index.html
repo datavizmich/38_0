@@ -6,7 +6,7 @@
     <title>38-0</title>
     <meta
       name="description"
-      content="A Scottish Premiership squad builder inspired by 7-0, powered by EAFC26 ratings."
+      content="A Scottish Premiership squad builder inspired by 7-0, powered by multi-year EAFC ratings."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -190,6 +190,20 @@
               <div class="season-placeholder">The table will appear when the season finishes.</div>
             </div>
           </article>
+        </section>
+
+        <section class="season-actions panel" data-season-actions hidden>
+          <div class="panel-header">
+            <div>
+              <p class="panel-kicker">Season complete</p>
+              <h2>What next?</h2>
+            </div>
+            <p class="panel-subtitle">Use these to restart or hand off your result for later.</p>
+          </div>
+          <div class="controls season-action-buttons">
+            <button class="primary" data-play-again type="button">Play again</button>
+            <button class="secondary" data-share-result type="button">Share your result</button>
+          </div>
         </section>
       </section>
     </main>

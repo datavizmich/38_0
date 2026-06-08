@@ -86,6 +86,22 @@ const HOME_ADVANTAGE = 0.12;
 const HOME_BASE = 0.18;
 const AWAY_BASE = 0.14;
 const DC_RHO = -0.08;
+const TEAM_THEMES = {
+  Aberdeen: { accent: "#b21f35", soft: "rgba(178, 31, 53, 0.18)" },
+  Celtic: { accent: "#1a8f4c", soft: "rgba(26, 143, 76, 0.18)" },
+  Dundee: { accent: "#0b5fa5", soft: "rgba(11, 95, 165, 0.18)" },
+  "Dundee United": { accent: "#eb7a20", soft: "rgba(235, 122, 32, 0.18)" },
+  Falkirk: { accent: "#1d7cc0", soft: "rgba(29, 124, 192, 0.18)" },
+  Hearts: { accent: "#7d1d31", soft: "rgba(125, 29, 49, 0.18)" },
+  Hibernian: { accent: "#0f7b43", soft: "rgba(15, 123, 67, 0.18)" },
+  Kilmarnock: { accent: "#123f8f", soft: "rgba(18, 63, 143, 0.18)" },
+  Livingston: { accent: "#af8b24", soft: "rgba(175, 139, 36, 0.18)" },
+  Motherwell: { accent: "#8d2145", soft: "rgba(141, 33, 69, 0.18)" },
+  Rangers: { accent: "#0a49b8", soft: "rgba(10, 73, 184, 0.18)" },
+  "Ross County": { accent: "#125da6", soft: "rgba(18, 93, 166, 0.18)" },
+  "St Mirren": { accent: "#38414a", soft: "rgba(56, 65, 74, 0.18)" },
+  "St Johnstone": { accent: "#2f6b3e", soft: "rgba(47, 107, 62, 0.18)" },
+};
 
 const state = {
   data: null,
@@ -131,8 +147,11 @@ function bindElements() {
     seasonProgress: document.querySelector("[data-season-progress]"),
     seasonFixtures: document.querySelector("[data-season-fixtures]"),
     seasonStatus: document.querySelector("[data-season-status]"),
-    seasonFeed: document.querySelector("[data-season-feed]"),
-    seasonTableWrap: document.querySelector("[data-season-table-wrap]"),
+  seasonFeed: document.querySelector("[data-season-feed]"),
+  seasonTableWrap: document.querySelector("[data-season-table-wrap]"),
+  seasonActions: document.querySelector("[data-season-actions]"),
+  playAgain: document.querySelector("[data-play-again]"),
+  shareResult: document.querySelector("[data-share-result]"),
   };
 
   const missing = Object.entries(els)
@@ -173,6 +192,15 @@ function randomChoice(values) {
 function seasonSortValue(season) {
   const digits = String(season).match(/\d+/);
   return digits ? Number(digits[0]) : Number.POSITIVE_INFINITY;
+}
+
+function teamTheme(team) {
+  return TEAM_THEMES[team] ?? { accent: "#5a6d62", soft: "rgba(90, 109, 98, 0.18)" };
+}
+
+function teamStyleAttr(team) {
+  const theme = teamTheme(team);
+  return `style="--team-accent:${theme.accent};--team-accent-soft:${theme.soft};"`;
 }
 
 function randomTeamForSeason(season) {
@@ -621,8 +649,11 @@ function renderGameMeta() {
   els.gameFormation.textContent = state.formation;
   els.gameMode.textContent = state.mode === "classic" ? "Classic" : "Memory";
   els.currentFormation.textContent = state.formation;
-  els.startSeason.hidden = !lineUpIsComplete() || state.view !== "game";
-  els.rollTeam.disabled = lineUpIsComplete();
+  const lineupComplete = lineUpIsComplete();
+  els.startSeason.hidden = !lineupComplete || state.view !== "game";
+  els.rollTeam.hidden = lineupComplete || state.view !== "game";
+  els.testSeason.hidden = lineupComplete || state.view !== "game";
+  els.rollTeam.disabled = lineupComplete;
   els.testSeason.disabled = state.view !== "home" && state.view !== "game";
   els.currentTeam.textContent = currentTeamLabel();
 }
@@ -662,11 +693,13 @@ function renderRoster() {
     .map((player) => {
       const isSelected = state.selectedPlayerId === player.id;
       const unavailable = !playerIsAvailable(player) && !isSelected;
+      const selectedStyle = isSelected ? teamStyleAttr(player.team) : "";
       return `
         <button
           class="player-card ${isSelected ? "selected" : ""} ${unavailable ? "unavailable" : ""}"
           data-player-id="${player.id}"
           type="button"
+          ${selectedStyle}
           ${unavailable ? "disabled" : ""}
           title="${unavailable ? "No open slot for this player in the current formation" : ""}"
         >
@@ -701,6 +734,7 @@ function renderPitch() {
           const canAcceptSelected = selected ? playerCanPlaySlot(selected, slot) : false;
           const canBeClicked = Boolean(selected && canAcceptSelected);
           const layout = FORMATION_LAYOUTS[state.formation][index];
+          const bubbleStyle = lockedPlayer ? teamStyleAttr(lockedPlayer.team) : "";
           return `
             <button
               class="slot ${lockedPlayer ? "filled" : "empty"} ${canBeClicked ? "target" : ""}"
@@ -712,7 +746,7 @@ function renderPitch() {
               <span class="slot-label">${slot}</span>
               ${
                 lockedPlayer
-                  ? `<span class="slot-bubble" aria-hidden="true" title="${escapeHtml(lockedPlayer.name)}">${escapeHtml(getPlayerBubbleLabel(lockedPlayer))}</span>`
+                  ? `<span class="slot-bubble" aria-hidden="true" title="${escapeHtml(lockedPlayer.name)}" ${bubbleStyle}>${escapeHtml(getPlayerBubbleLabel(lockedPlayer))}</span>`
                   : ""
               }
             </button>
@@ -764,6 +798,9 @@ function renderSeasonHeader() {
   els.seasonStatus.textContent = complete ? "Season complete" : "Season in progress";
   if (complete) {
     renderSeasonTable();
+    renderSeasonActions();
+  } else {
+    els.seasonActions.hidden = true;
   }
 }
 
@@ -860,11 +897,17 @@ function renderSeasonTable() {
   `;
 }
 
+function renderSeasonActions() {
+  if (!state.season) return;
+  els.seasonActions.hidden = !state.season.complete;
+}
+
 function renderSeason() {
   renderSeasonHeader();
   renderSeasonFeed();
   if (state.season && !state.season.complete) {
     els.seasonTableWrap.innerHTML = `<div class="season-placeholder">The table will appear when the season finishes.</div>`;
+    els.seasonActions.hidden = true;
   }
 }
 
@@ -888,6 +931,7 @@ function finishSeason() {
   renderSeasonHeader();
   renderSeasonFeed();
   renderSeasonTable();
+  renderSeasonActions();
 }
 
 function renderAll() {
@@ -988,6 +1032,8 @@ function wireControls() {
 
   on(els.playGame, "click", startGame);
   on(els.backHome, "click", goHome);
+  on(els.playAgain, "click", goHome);
+  on(els.shareResult, "click", goHome);
   on(els.seasonBack, "click", () => {
     clearSeasonTimer();
     state.view = "game";

@@ -129,7 +129,14 @@ def canonical_team_name(team: str | None) -> str | None:
 
 
 def season_label(season_code: str) -> str:
-    return season_code
+    value = str(season_code).strip()
+    if value.startswith("FC") and value[2:].isdigit():
+        return str(2000 + int(value[2:]))
+    if value.startswith("FIFA") and value[4:].isdigit():
+        return str(2000 + int(value[4:]))
+    if value.isdigit():
+        return value
+    return value
 
 
 def season_sort_value(season_code: str) -> int:
@@ -340,6 +347,7 @@ def build_players_for_source(source_tag: str, source_path: Path, season_code: st
                 if row.get("League") != "Scottish Prem":
                     continue
                 resolved_season = season_code or "FC"
+                resolved_season = season_label(resolved_season)
                 ratings = derive_eafc26_ratings(row)
                 player = build_player_record(
                     season_code=resolved_season,
@@ -358,7 +366,7 @@ def build_players_for_source(source_tag: str, source_path: Path, season_code: st
                     continue
                 ratings = derive_fc24_ratings(row)
                 player = build_player_record(
-                    season_code=season_code or "FC24",
+                    season_code=season_label(season_code or "FC24"),
                     source_tag=source_tag,
                     row_index=row_index,
                     row=row,
@@ -369,7 +377,7 @@ def build_players_for_source(source_tag: str, source_path: Path, season_code: st
                     ratings=ratings,
                 )
             else:
-                season = f"FIFA{row.get('fifa_version', '')}"
+                season = season_label(f"FIFA{row.get('fifa_version', '')}")
                 team_raw = row.get("club_name", "")
                 league_name = row.get("league_name", "")
                 if canonical_team_name(team_raw) is None:

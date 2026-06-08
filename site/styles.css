@@ -391,6 +391,15 @@ button:focus-visible {
   background: rgba(90, 109, 98, 0.08);
 }
 
+.season-actions {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.season-action-buttons {
+  margin: 0;
+}
+
 .content {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
@@ -443,9 +452,9 @@ button:focus-visible {
 }
 
 .player-card.selected {
-  background: rgba(90, 109, 98, 0.08);
+  background: var(--team-accent-soft, rgba(90, 109, 98, 0.08));
   box-shadow: none;
-  border-color: rgba(90, 109, 98, 0.18);
+  border-color: var(--team-accent, rgba(90, 109, 98, 0.18));
 }
 
 .player-card.unavailable {
@@ -547,7 +556,11 @@ button:focus-visible {
 }
 
 .slot.filled {
-  background: rgba(255, 255, 255, 0.15);
+  background:
+    linear-gradient(180deg, var(--team-accent-soft, rgba(255, 255, 255, 0.12)), rgba(255, 255, 255, 0.06)),
+    rgba(255, 255, 255, 0.08);
+  border-color: var(--team-accent, rgba(255, 255, 255, 0.22));
+  box-shadow: 0 0 0 1px var(--team-accent-soft, rgba(255, 255, 255, 0.1)) inset;
 }
 
 .slot.target {
@@ -578,9 +591,9 @@ button:focus-visible {
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--team-accent-soft, rgba(255, 255, 255, 0.2));
   color: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 1px solid var(--team-accent, rgba(255, 255, 255, 0.24));
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -598,6 +611,14 @@ button:focus-visible {
 
 .empty-card {
   cursor: default;
+}
+
+.slot.filled .slot-label {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.slot.filled .slot-bubble {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
 }
 
 @media (max-width: 1080px) {

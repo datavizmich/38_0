@@ -1,4 +1,5 @@
 A random Scottish Premiership football game, in the style of 7-0.
+Season labels are shown as calendar years, like `2024` or `2021`.
 
 ## Current flow
 
