@@ -9,7 +9,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "data" / "EAFC26-Men.csv"
-OUTPUT = ROOT / "site" / "data" / "premier-league-players.json"
+OUTPUT = ROOT / "site" / "data" / "scottish-premiership-players.json"
+
+TEAM_RENAMES = {
+    "Dundee FC": "Dundee",
+    "St. Mirren": "St Mirren",
+}
 
 
 def parse_alt_positions(value: str) -> list[str]:
@@ -44,16 +49,18 @@ def main() -> None:
         players = []
 
         for row in reader:
-            if row.get("League") != "Premier League":
+            if row.get("League") != "Scottish Prem":
                 continue
+
+            team = TEAM_RENAMES.get(row.get("Team", ""), row.get("Team", ""))
 
             players.append(
                 {
                     "id": parse_int(row.get("ID", "")),
                     "rank": parse_int(row.get("Rank", "")),
                     "name": row.get("Name", ""),
-                    "team": row.get("Team", ""),
-                    "league": row.get("League", ""),
+                    "team": team,
+                    "league": "Scottish Premiership",
                     "nation": row.get("Nation", ""),
                     "position": row.get("Position", ""),
                     "altPositions": parse_alt_positions(row.get("Alternative positions", "")),
@@ -77,13 +84,13 @@ def main() -> None:
 
     payload = {
         "source": "EAFC26-Men.csv",
-        "league": "Premier League",
+        "league": "Scottish Premiership",
         "count": len(players),
         "players": players,
     }
 
     OUTPUT.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"Wrote {OUTPUT.relative_to(ROOT)} with {len(players)} Premier League players")
+    print(f"Wrote {OUTPUT.relative_to(ROOT)} with {len(players)} Scottish Premiership players")
 
 
 if __name__ == "__main__":

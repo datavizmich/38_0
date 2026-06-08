@@ -80,6 +80,7 @@ const FORMATION_LAYOUTS = {
 };
 
 const TEAM_NAME = "38-0 XI";
+const PHASE_ONE_ROUNDS = 33;
 const MAX_GOALS = 6;
 const HOME_ADVANTAGE = 0.12;
 const HOME_BASE = 0.18;
@@ -268,7 +269,7 @@ function buildBestLineup(players, formation = state.formation) {
 }
 
 function buildOpponentTeams() {
-  const teamNames = shuffle([...new Set(state.teams)]).slice(0, 19);
+  const teamNames = shuffle([...new Set(state.teams)]).slice(0, 11);
   return teamNames.map((name) => {
     const players = teamPlayers(name);
     const lineup = buildBestLineup(players);
@@ -325,10 +326,33 @@ function generateSingleRoundRobin(teamNames) {
   return rounds;
 }
 
-function generateSeasonSchedule(teamNames) {
-  const firstLeg = generateSingleRoundRobin(teamNames);
-  const secondLeg = firstLeg.map((round) => round.map((match) => ({ home: match.away, away: match.home })));
-  return [...firstLeg, ...secondLeg];
+function flipRound(round) {
+  return round.map((match) => ({ home: match.away, away: match.home }));
+}
+
+function cloneRound(round) {
+  return round.map((match) => ({ home: match.home, away: match.away }));
+}
+
+function generateScottishPremPhaseOne(teamNames) {
+  const baseRounds = generateSingleRoundRobin(teamNames);
+  const rounds = [];
+
+  for (let cycle = 0; cycle < 3; cycle += 1) {
+    const inverted = cycle % 2 === 1;
+    baseRounds.forEach((round) => {
+      rounds.push(inverted ? flipRound(round) : cloneRound(round));
+    });
+  }
+
+  return rounds;
+}
+
+function generateSplitSchedule(topSix, bottomSix) {
+  const topRounds = generateSingleRoundRobin(topSix);
+  const bottomRounds = generateSingleRoundRobin(bottomSix);
+
+  return topRounds.map((round, index) => [...cloneRound(round), ...cloneRound(bottomRounds[index])]);
 }
 
 function poissonProbability(k, lambda) {
@@ -456,12 +480,12 @@ function buildSeason() {
 
   const opponentTeams = buildOpponentTeams();
   const teams = shuffle([userTeam, ...opponentTeams]);
-  const schedule = generateSeasonSchedule(teams.map((team) => team.name));
+  const firstPhaseSchedule = generateScottishPremPhaseOne(teams.map((team) => team.name));
   const teamByName = new Map(teams.map((team) => [team.name, team]));
   const table = initializeTable(teams);
   const fixtures = [];
 
-  schedule.forEach((roundMatches, roundIndex) => {
+  firstPhaseSchedule.forEach((roundMatches, roundIndex) => {
     roundMatches.forEach((match) => {
       const homeTeam = teamByName.get(match.home);
       const awayTeam = teamByName.get(match.away);
@@ -469,6 +493,29 @@ function buildSeason() {
       const score = sampleScoreline(homeLambda, awayLambda);
       const fixture = {
         round: roundIndex + 1,
+        home: match.home,
+        away: match.away,
+        homeGoals: score.homeGoals,
+        awayGoals: score.awayGoals,
+      };
+      fixtures.push(fixture);
+      applyResult(table, fixture);
+    });
+  });
+
+  const phaseOneTable = sortTableRows(table.values());
+  const topSix = phaseOneTable.slice(0, 6).map((row) => row.team);
+  const bottomSix = phaseOneTable.slice(6, 12).map((row) => row.team);
+  const splitSchedule = generateSplitSchedule(topSix, bottomSix);
+
+  splitSchedule.forEach((roundMatches, roundIndex) => {
+    roundMatches.forEach((match) => {
+      const homeTeam = teamByName.get(match.home);
+      const awayTeam = teamByName.get(match.away);
+      const { homeLambda, awayLambda } = expectedGoals(homeTeam, awayTeam);
+      const score = sampleScoreline(homeLambda, awayLambda);
+      const fixture = {
+        round: PHASE_ONE_ROUNDS + roundIndex + 1,
         home: match.home,
         away: match.away,
         homeGoals: score.homeGoals,
@@ -490,11 +537,12 @@ function buildSeason() {
     revealed: 0,
     complete: false,
     teamName: TEAM_NAME,
+    splitRound: PHASE_ONE_ROUNDS,
   };
 }
 
 function buildPresetSeasonTeam() {
-  const preferredTeam = state.teams.find((team) => team.toLowerCase() === "liverpool") ?? state.teams[0];
+  const preferredTeam = state.teams.find((team) => team.toLowerCase() === "celtic") ?? state.teams[0];
   if (!preferredTeam) return false;
 
   state.currentTeam = preferredTeam;
@@ -685,11 +733,29 @@ function renderSeasonHeader() {
 
 function renderSeasonFeed() {
   if (!state.season) return;
-  els.seasonFeed.innerHTML = state.season.userFixtures
-    .slice(0, state.season.revealed)
-    .map(renderSeasonMatch)
-    .join("");
+  const visibleFixtures = state.season.userFixtures.slice(0, state.season.revealed);
+  const items = [];
+  let previousRound = null;
+
+  visibleFixtures.forEach((fixture) => {
+    if (previousRound !== null && previousRound <= state.season.splitRound && fixture.round > state.season.splitRound) {
+      items.push(renderSeasonSplitDivider());
+    }
+
+    items.push(renderSeasonMatch(fixture));
+    previousRound = fixture.round;
+  });
+
+  els.seasonFeed.innerHTML = items.join("");
   scrollSeasonFeedToBottom();
+}
+
+function renderSeasonSplitDivider() {
+  return `
+    <div class="season-divider">
+      <span>Split stage begins: top six and bottom six</span>
+    </div>
+  `;
 }
 
 function renderSeasonMatch(match) {
@@ -860,10 +926,9 @@ function animateSeason() {
       return;
     }
 
-    els.seasonFeed.insertAdjacentHTML("beforeend", renderSeasonMatch(next));
     state.season.revealed += 1;
+    renderSeasonFeed();
     renderSeasonHeader();
-    scrollSeasonFeedToBottom();
 
     if (state.season.revealed >= state.season.userFixtures.length) {
       finishSeason();
@@ -928,7 +993,7 @@ async function init() {
 
   bindElements();
 
-  const response = await fetch("./data/premier-league-players.json");
+  const response = await fetch("./data/scottish-premiership-players.json");
   if (!response.ok) {
     throw new Error(`Failed to load player data: ${response.status}`);
   }
@@ -953,7 +1018,7 @@ init().catch((error) => {
     <main style="padding:2rem;color:#fff;font-family:system-ui,sans-serif">
       <h1>Failed to boot the site</h1>
       <p>${escapeHtml(error.message)}</p>
-      <p>Make sure <code>site/data/premier-league-players.json</code> has been generated.</p>
+      <p>Make sure <code>site/data/scottish-premiership-players.json</code> has been generated.</p>
     </main>
   `;
 });

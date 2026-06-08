@@ -314,6 +314,24 @@ button:focus-visible {
   background: rgba(111, 63, 63, 0.08);
 }
 
+.season-divider {
+  display: flex;
+  justify-content: center;
+  padding: 0.2rem 0;
+}
+
+.season-divider span {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(37, 43, 48, 0.09);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .season-match-meta {
   color: var(--muted);
   font-size: 0.78rem;
