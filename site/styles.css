@@ -62,6 +62,30 @@ body {
   padding: 2rem 0 3rem;
 }
 
+.brand-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  color: var(--muted);
+  font-family: "Space Grotesk", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  flex-wrap: wrap;
+}
+
+.brand-footer strong {
+  color: var(--text);
+  letter-spacing: 0.2em;
+}
+
+.footer-feedback {
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+}
+
 .view[hidden] {
   display: none !important;
 }
@@ -621,6 +645,72 @@ button:focus-visible {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
 }
 
+.feedback-button {
+  width: fit-content;
+}
+
+.feedback-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  background: var(--panel-solid);
+}
+
+.modal {
+  border: none;
+  padding: 0;
+  background: transparent;
+  max-width: min(680px, calc(100vw - 2rem));
+  width: 100%;
+}
+
+.modal::backdrop {
+  background: rgba(20, 24, 28, 0.48);
+  backdrop-filter: blur(6px);
+}
+
+.modal-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem;
+  border-radius: 1.35rem;
+  background: var(--panel-solid);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 24px 70px rgba(18, 22, 25, 0.22);
+}
+
+.feedback-control textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 160px;
+  border: 1px solid rgba(37, 43, 48, 0.14);
+  border-radius: 0.9rem;
+  padding: 0.85rem 0.9rem;
+  font: inherit;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.modal-actions {
+  margin: 0;
+}
+
+.share-card {
+  max-width: 620px;
+}
+
+.share-preview {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 1rem;
+  border: 1px solid rgba(37, 43, 48, 0.12);
+  background: rgba(255, 255, 255, 0.6);
+}
+
 @media (max-width: 1080px) {
   .hero,
   .content {
@@ -674,5 +764,10 @@ button:focus-visible {
     width: 3rem;
     height: 3rem;
     font-size: 0.6rem;
+  }
+
+  .feedback-fab {
+    right: 0.75rem;
+    bottom: 0.75rem;
   }
 }

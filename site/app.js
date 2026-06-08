@@ -102,6 +102,7 @@ const TEAM_THEMES = {
   "St Mirren": { accent: "#38414a", soft: "rgba(56, 65, 74, 0.18)" },
   "St Johnstone": { accent: "#2f6b3e", soft: "rgba(47, 107, 62, 0.18)" },
 };
+const FEEDBACK_EMAIL = "datavizmich@outlook.com";
 
 const state = {
   data: null,
@@ -149,9 +150,20 @@ function bindElements() {
     seasonStatus: document.querySelector("[data-season-status]"),
   seasonFeed: document.querySelector("[data-season-feed]"),
   seasonTableWrap: document.querySelector("[data-season-table-wrap]"),
-  seasonActions: document.querySelector("[data-season-actions]"),
-  playAgain: document.querySelector("[data-play-again]"),
-  shareResult: document.querySelector("[data-share-result]"),
+    seasonActions: document.querySelector("[data-season-actions]"),
+    playAgain: document.querySelector("[data-play-again]"),
+    shareResult: document.querySelector("[data-share-result]"),
+    openFeedbackButtons: document.querySelectorAll("[data-open-feedback]"),
+    feedbackModal: document.querySelector("[data-feedback-modal]"),
+    feedbackForm: document.querySelector("[data-feedback-form]"),
+    feedbackText: document.querySelector("[data-feedback-text]"),
+    sendFeedback: document.querySelector("[data-send-feedback]"),
+    closeFeedbackButtons: document.querySelectorAll("[data-close-feedback]"),
+    shareModal: document.querySelector("[data-share-modal]"),
+    sharePreview: document.querySelector("[data-share-preview]"),
+    closeShareButtons: document.querySelectorAll("[data-close-share]"),
+    downloadShare: document.querySelector("[data-download-share]"),
+    postShare: document.querySelector("[data-post-share]"),
   };
 
   const missing = Object.entries(els)
@@ -194,6 +206,12 @@ function seasonSortValue(season) {
   return digits ? Number(digits[0]) : Number.POSITIVE_INFINITY;
 }
 
+function shareUrl() {
+  const url = new URL(window.location.href);
+  url.hash = "";
+  return url.toString();
+}
+
 function teamTheme(team) {
   return TEAM_THEMES[team] ?? { accent: "#5a6d62", soft: "rgba(90, 109, 98, 0.18)" };
 }
@@ -211,9 +229,28 @@ function currentTeamLabel() {
   return state.currentTeam ? teamLabel(state.currentTeam) : "Roll a team";
 }
 
+function ordinalSuffix(value) {
+  const mod100 = value % 100;
+  if (mod100 >= 11 && mod100 <= 13) return "th";
+  switch (value % 10) {
+    case 1:
+      return "st";
+    case 2:
+      return "nd";
+    case 3:
+      return "rd";
+    default:
+      return "th";
+  }
+}
+
 function playerMetaLabel(player) {
   const rating = state.mode === "memory" ? "??" : player.ovr;
   return `${player.position} · ${rating}`;
+}
+
+function playerRatingLabel(player) {
+  return state.mode === "memory" ? "??" : String(player.ovr ?? "??");
 }
 
 function positionRank(position) {
@@ -663,6 +700,18 @@ function renderGameMeta() {
   els.currentTeam.textContent = currentTeamLabel();
 }
 
+function openDialog(dialog) {
+  if (dialog && typeof dialog.showModal === "function" && !dialog.open) {
+    dialog.showModal();
+  }
+}
+
+function closeDialog(dialog) {
+  if (dialog && dialog.open) {
+    dialog.close();
+  }
+}
+
 function renderRoster() {
   const players = state.currentTeam ? teamPlayers(state.currentTeam) : [];
   const selected = selectedPlayer();
@@ -907,6 +956,186 @@ function renderSeasonActions() {
   els.seasonActions.hidden = !state.season.complete;
 }
 
+function currentUserRow() {
+  if (!state.season?.finalTable?.length) return null;
+  return state.season.finalTable.find((row) => row.team === TEAM_NAME) ?? null;
+}
+
+function topTableRows(limit = 8) {
+  if (!state.season?.finalTable?.length) return [];
+  const rows = [...state.season.finalTable];
+  const userRow = rows.find((row) => row.team === TEAM_NAME);
+  const top = rows.slice(0, limit);
+  if (userRow && !top.includes(userRow)) {
+    top[top.length - 1] = userRow;
+  }
+  return top;
+}
+
+function seasonSummaryText() {
+  const row = currentUserRow();
+  if (!row) return "Scotland-38-0";
+  return `${TEAM_NAME} finished with ${row.points} points`;
+}
+
+function formatShareText() {
+  const row = currentUserRow();
+  const position = row ? state.season.finalTable.findIndex((entry) => entry.team === TEAM_NAME) + 1 : null;
+  return `I just completed a season on Scotland-38-0${row ? `, finishing ${position}${ordinalSuffix(position)} with ${row.points} points` : ""}. ${shareUrl()}`;
+}
+
+function drawRoundedRect(ctx, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
+}
+
+async function generateShareImage() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1200;
+  canvas.height = 1500;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  const bgGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  bgGradient.addColorStop(0, "#efe8df");
+  bgGradient.addColorStop(1, "#e1ddd4");
+  ctx.fillStyle = bgGradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "rgba(255,255,255,0.72)";
+  drawRoundedRect(ctx, 48, 48, 1104, 1404, 34);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(32,38,43,0.08)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = "#20262b";
+  ctx.font = "700 54px 'Space Grotesk', sans-serif";
+  ctx.fillText("Scotland-38-0", 92, 132);
+
+  ctx.fillStyle = "#6d767f";
+  ctx.font = "500 24px 'Inter', sans-serif";
+  ctx.fillText(state.season?.teamName ?? TEAM_NAME, 92, 180);
+
+  const row = currentUserRow();
+  ctx.fillStyle = "#20262b";
+  ctx.font = "700 34px 'Space Grotesk', sans-serif";
+  ctx.fillText(row ? `Final position: ${state.season.finalTable.findIndex((entry) => entry.team === TEAM_NAME) + 1}` : "Season result", 92, 248);
+
+  ctx.fillStyle = "#6d767f";
+  ctx.font = "500 22px 'Inter', sans-serif";
+  ctx.fillText(row ? `${row.points} pts  ·  ${row.gf} GF  ·  ${row.ga} GA  ·  ${row.gd} GD` : "", 92, 286);
+
+  ctx.fillStyle = "#20262b";
+  ctx.font = "700 30px 'Space Grotesk', sans-serif";
+  ctx.fillText("Lineup", 92, 356);
+
+  ctx.font = "600 22px 'Inter', sans-serif";
+  const lineup = orderedLineupFromMap(state.lineup);
+  lineup.forEach((player, index) => {
+    const y = 406 + index * 42;
+    ctx.fillStyle = "#6d767f";
+    ctx.fillText(FORMATIONS[state.formation][index], 92, y);
+    ctx.fillStyle = "#20262b";
+    ctx.fillText(player.name, 184, y);
+    ctx.fillStyle = "#6d767f";
+    ctx.fillText(playerRatingLabel(player), 872, y);
+  });
+
+  ctx.fillStyle = "#20262b";
+  ctx.font = "700 30px 'Space Grotesk', sans-serif";
+  ctx.fillText("League table", 92, 920);
+
+  const rows = topTableRows(8);
+  const startY = 970;
+  ctx.font = "600 20px 'Inter', sans-serif";
+  rows.forEach((tableRow, index) => {
+    const y = startY + index * 44;
+    const highlight = tableRow.team === TEAM_NAME;
+    if (highlight) {
+      ctx.fillStyle = "rgba(90,109,98,0.12)";
+      drawRoundedRect(ctx, 76, y - 28, 1048, 34, 16);
+      ctx.fill();
+    }
+    ctx.fillStyle = "#6d767f";
+    ctx.fillText(String(index + 1), 92, y);
+    ctx.fillStyle = "#20262b";
+    ctx.fillText(tableRow.team, 136, y);
+    ctx.fillStyle = "#6d767f";
+    ctx.fillText(String(tableRow.played), 626, y);
+    ctx.fillText(String(tableRow.points), 1032, y);
+  });
+
+  ctx.fillStyle = "#6d767f";
+  ctx.font = "500 20px 'Inter', sans-serif";
+  ctx.fillText("Scotland-38-0", 92, 1422);
+  ctx.textAlign = "right";
+  ctx.fillText(shareUrl(), 1108, 1422);
+  ctx.textAlign = "left";
+
+  return await new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        resolve(null);
+        return;
+      }
+      resolve({ blob, dataUrl: canvas.toDataURL("image/png") });
+    }, "image/png");
+  });
+}
+
+async function openShareModal() {
+  if (!state.season?.complete) return;
+  const asset = await generateShareImage();
+  if (!asset) return;
+  els.sharePreview.src = asset.dataUrl;
+  els.sharePreview.dataset.shareText = formatShareText();
+  openDialog(els.shareModal);
+}
+
+async function downloadShareImage() {
+  const asset = await generateShareImage();
+  if (!asset) return;
+  const url = URL.createObjectURL(asset.blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "scotland-38-0-result.png";
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function postShareResult() {
+  const asset = await generateShareImage();
+  if (!asset) return;
+  const text = formatShareText();
+  const file = new File([asset.blob], "scotland-38-0-result.png", { type: "image/png" });
+  if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+    await navigator.share({ title: "Scotland-38-0", text, files: [file] });
+    return;
+  }
+  const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+  window.open(intentUrl, "_blank", "noopener,noreferrer");
+}
+
+function openFeedback() {
+  openDialog(els.feedbackModal);
+  els.feedbackText.value = els.feedbackText.value || "";
+  els.feedbackText.focus();
+}
+
+function sendFeedbackEmail() {
+  const body = encodeURIComponent(els.feedbackText.value.trim() || "Feedback for Scotland-38-0:");
+  const subject = encodeURIComponent("Scotland-38-0 feedback");
+  const href = `mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`;
+  window.location.href = href;
+}
+
 function renderSeason() {
   renderSeasonHeader();
   renderSeasonFeed();
@@ -1038,7 +1267,7 @@ function wireControls() {
   on(els.playGame, "click", startGame);
   on(els.backHome, "click", goHome);
   on(els.playAgain, "click", goHome);
-  on(els.shareResult, "click", goHome);
+  on(els.shareResult, "click", openShareModal);
   on(els.seasonBack, "click", () => {
     clearSeasonTimer();
     state.view = "game";
@@ -1048,6 +1277,15 @@ function wireControls() {
   on(els.rollTeam, "click", rollTeam);
   on(els.startSeason, "click", startSeason);
   on(els.testSeason, "click", testSeason);
+  on(els.downloadShare, "click", downloadShareImage);
+  on(els.postShare, "click", postShareResult);
+  on(els.sendFeedback, "click", sendFeedbackEmail);
+
+  els.openFeedbackButtons.forEach((button) => on(button, "click", openFeedback));
+  els.closeFeedbackButtons.forEach((button) =>
+    on(button, "click", () => closeDialog(els.feedbackModal)),
+  );
+  els.closeShareButtons.forEach((button) => on(button, "click", () => closeDialog(els.shareModal)));
 
   on(els.homeFormation, "change", () => {
     state.formation = els.homeFormation.value;
@@ -1061,6 +1299,7 @@ function wireControls() {
     state.mode = els.homeMode.value;
     renderHomeSetup();
     renderGameMeta();
+    renderRoster();
   });
 
   window.addEventListener("hashchange", () => {

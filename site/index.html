@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>38-0</title>
+    <title>Scotland-38-0</title>
     <meta
       name="description"
       content="A Scottish Premiership squad builder inspired by 7-0, powered by multi-year EAFC ratings."
@@ -25,7 +25,7 @@
       <section class="view home-view" data-home-view>
         <header class="hero hero-home">
           <div>
-            <p class="eyebrow">38-0</p>
+            <p class="eyebrow">Scotland-38-0</p>
             <h1>Roll a team. Lock one player. Build a squad across multiple rounds.</h1>
             <p class="lede">
               Choose your formation and mode, then start the game. Each roll gives you one
@@ -69,6 +69,9 @@
           </div>
 
           <button class="primary play-button" data-play-game>Play Game</button>
+          <button class="secondary play-button feedback-button" data-open-feedback type="button">
+            Feedback
+          </button>
         </section>
       </section>
 
@@ -83,7 +86,7 @@
 
         <header class="hero hero-game">
           <div>
-            <p class="eyebrow">38-0</p>
+            <p class="eyebrow">Scotland-38-0</p>
             <h1>Roll a club. Pick a player. Lock them to a position.</h1>
             <p class="lede">
               Roll a random Scottish Premiership club-year, click a player on the left, then click a
@@ -205,7 +208,61 @@
             <button class="secondary" data-share-result type="button">Share your result</button>
           </div>
         </section>
+
+        <button class="feedback-fab" data-open-feedback type="button">Feedback</button>
       </section>
+
+      <footer class="brand-footer" aria-label="Scotland 38-0 branding">
+        <span>--------------</span>
+        <strong>Scotland-38-0</strong>
+        <span>--------------</span>
+        <button class="secondary footer-feedback" data-open-feedback type="button">Feedback</button>
+      </footer>
     </main>
+
+    <dialog class="modal" data-feedback-modal>
+      <form class="modal-card" data-feedback-form method="dialog">
+        <div class="panel-header">
+          <div>
+            <p class="panel-kicker">Feedback</p>
+            <h2>Send a note</h2>
+          </div>
+          <button class="back-button" data-close-feedback type="button">Close</button>
+        </div>
+
+        <p class="panel-subtitle">
+          This opens your mail app with the message prefilled to <strong>datavizmich@outlook.com</strong>.
+        </p>
+
+        <label class="control feedback-control">
+          <span>Your comments</span>
+          <textarea data-feedback-text rows="6" placeholder="What should change next?"></textarea>
+        </label>
+
+        <div class="controls modal-actions">
+          <button class="primary" data-send-feedback type="button">Open email</button>
+          <button class="secondary" data-close-feedback type="button">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" data-share-modal>
+      <div class="modal-card share-card">
+        <div class="panel-header">
+          <div>
+            <p class="panel-kicker">Share result</p>
+            <h2>Preview image</h2>
+          </div>
+          <button class="back-button" data-close-share type="button">Close</button>
+        </div>
+
+        <img class="share-preview" data-share-preview alt="Preview of season result" />
+
+        <div class="controls modal-actions">
+          <button class="primary" data-download-share type="button">Download image</button>
+          <button class="secondary" data-post-share type="button">Share to X</button>
+        </div>
+      </div>
+    </dialog>
   </body>
 </html>
