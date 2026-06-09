@@ -131,7 +131,6 @@ function bindElements() {
     backHome: document.querySelector("[data-back-home]"),
     rollTeam: document.querySelector("[data-roll-team]"),
     startSeason: document.querySelector("[data-start-season]"),
-    testSeason: document.querySelector("[data-test-season]"),
     gameFormation: document.querySelector("[data-game-formation]"),
     gameMode: document.querySelector("[data-game-mode]"),
     currentTeam: document.querySelector("[data-current-team]"),
@@ -669,28 +668,6 @@ function buildSeason() {
   };
 }
 
-function buildPresetSeasonTeam() {
-  const latestSeason = state.seasons[state.seasons.length - 1] ?? null;
-  const preferredTeam =
-    state.teams.find((team) => team.season === latestSeason && team.team === "Celtic") ??
-    state.teams.find((team) => team.season === latestSeason) ??
-    state.teams[0];
-  if (!preferredTeam) return false;
-
-  state.currentTeam = preferredTeam;
-  state.selectedPlayerId = null;
-  state.lineup.clear();
-
-  const players = teamPlayers(preferredTeam);
-  const filled = buildBestLineup(players);
-  filled.forEach((player, index) => {
-    state.lineup.set(index, player);
-  });
-
-  state.currentTeam = null;
-  return lineUpIsComplete();
-}
-
 function renderStats() {
   els.totalPlayers.textContent = state.data.players.length.toLocaleString();
   els.totalTeams.textContent = state.teams.length.toString();
@@ -722,9 +699,7 @@ function renderGameMeta() {
   const awaitingSelection = Boolean(state.currentTeam && !lineupComplete);
   els.startSeason.hidden = !lineupComplete || state.view !== "game";
   els.rollTeam.hidden = lineupComplete || state.view !== "game" || awaitingSelection;
-  els.testSeason.hidden = lineupComplete || state.view !== "game" || awaitingSelection;
   els.rollTeam.disabled = lineupComplete || awaitingSelection;
-  els.testSeason.disabled = state.view !== "home" && state.view !== "game";
   els.currentTeam.textContent = currentTeamLabel();
 }
 
@@ -1030,7 +1005,8 @@ function seasonSummaryText() {
 function formatShareText() {
   const row = currentUserRow();
   const position = row ? state.season.finalTable.findIndex((entry) => entry.team === TEAM_NAME) + 1 : null;
-  return `I just completed a season on Scotland-38-0${row ? `, finishing ${position}${ordinalSuffix(position)} with ${row.points} points` : ""}. ${shareUrl()}`;
+  const modeLabel = state.mode === "memory" ? "Memory" : "Classic";
+  return `I just completed a ${modeLabel} season on Scotland-38-0${row ? `, finishing ${position}${ordinalSuffix(position)} with ${row.points} points` : ""}. ${shareUrl()}`;
 }
 
 function drawRoundedRect(ctx, x, y, width, height, radius) {
@@ -1246,12 +1222,6 @@ function startSeason() {
   animateSeason();
 }
 
-function testSeason() {
-  const ready = buildPresetSeasonTeam();
-  if (!ready) return;
-  startSeason();
-}
-
 function animateSeason() {
   if (!state.season) return;
   clearSeasonTimer();
@@ -1303,7 +1273,6 @@ function wireControls() {
   });
   on(els.rollTeam, "click", rollTeam);
   on(els.startSeason, "click", startSeason);
-  on(els.testSeason, "click", testSeason);
   on(els.downloadShare, "click", downloadShareImage);
   on(els.postShare, "click", postShareResult);
   els.closeShareButtons.forEach((button) => on(button, "click", () => closeDialog(els.shareModal)));
