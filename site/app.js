@@ -149,6 +149,8 @@ function bindElements() {
   seasonFeed: document.querySelector("[data-season-feed]"),
   seasonTableWrap: document.querySelector("[data-season-table-wrap]"),
     seasonActions: document.querySelector("[data-season-actions]"),
+    seasonReveal: document.querySelector("[data-season-reveal]"),
+    seasonRevealGrid: document.querySelector("[data-season-reveal-grid]"),
     playAgain: document.querySelector("[data-play-again]"),
     shareResult: document.querySelector("[data-share-result]"),
     shareModal: document.querySelector("[data-share-modal]"),
@@ -283,10 +285,6 @@ function selectedPlayer() {
 function getSurname(player) {
   const parts = String(player.name).trim().split(/\s+/).filter(Boolean);
   return parts.length ? parts[parts.length - 1] : String(player.name);
-}
-
-function getPlayerBubbleLabel(player) {
-  return getSurname(player);
 }
 
 function lineUpIsComplete() {
@@ -508,6 +506,28 @@ function expectedGoals(homeTeam, awayTeam) {
   return { homeLambda, awayLambda };
 }
 
+function biasScorelineTowardsStrongerTeam(homeTeam, awayTeam, score) {
+  if (score.homeGoals !== score.awayGoals) return score;
+
+  const homeStrength = homeTeam.attack + homeTeam.defense;
+  const awayStrength = awayTeam.attack + awayTeam.defense;
+  const edge = homeStrength - awayStrength;
+  const strongerHome = edge >= 0;
+  const magnitude = Math.min(1, Math.abs(edge) / 20);
+  const chanceToBreakDraw = 0.2 + magnitude * 0.5;
+
+  if (Math.random() > chanceToBreakDraw) {
+    return score;
+  }
+
+  const winnerGoals = Math.random() < 0.78 + magnitude * 0.12 ? 1 : 2;
+  const loserGoals = winnerGoals === 1 ? 0 : 1;
+
+  return strongerHome
+    ? { homeGoals: winnerGoals, awayGoals: loserGoals }
+    : { homeGoals: loserGoals, awayGoals: winnerGoals };
+}
+
 function initializeTable(teams) {
   const table = new Map();
   teams.forEach((team) => {
@@ -582,7 +602,11 @@ function buildSeason() {
       const homeTeam = teamByKey.get(match.home);
       const awayTeam = teamByKey.get(match.away);
       const { homeLambda, awayLambda } = expectedGoals(homeTeam, awayTeam);
-      const score = sampleScoreline(homeLambda, awayLambda);
+      const score = biasScorelineTowardsStrongerTeam(
+        homeTeam,
+        awayTeam,
+        sampleScoreline(homeLambda, awayLambda),
+      );
       const fixture = {
         round: roundIndex + 1,
         home: match.home,
@@ -605,7 +629,11 @@ function buildSeason() {
       const homeTeam = teamByKey.get(match.home);
       const awayTeam = teamByKey.get(match.away);
       const { homeLambda, awayLambda } = expectedGoals(homeTeam, awayTeam);
-      const score = sampleScoreline(homeLambda, awayLambda);
+      const score = biasScorelineTowardsStrongerTeam(
+        homeTeam,
+        awayTeam,
+        sampleScoreline(homeLambda, awayLambda),
+      );
       const fixture = {
         round: PHASE_ONE_ROUNDS + roundIndex + 1,
         home: match.home,
@@ -619,7 +647,10 @@ function buildSeason() {
   });
 
   const userFixtures = fixtures.filter((fixture) => fixture.home === TEAM_NAME || fixture.away === TEAM_NAME);
-  const finalTable = sortTableRows(table.values());
+  const finalRows = [...table.values()];
+  const finalTop = sortTableRows(finalRows.filter((row) => topSix.includes(row.key)));
+  const finalBottom = sortTableRows(finalRows.filter((row) => bottomSix.includes(row.key)));
+  const finalTable = [...finalTop, ...finalBottom];
 
   return {
     teams,
@@ -684,10 +715,11 @@ function renderGameMeta() {
   els.gameMode.textContent = state.mode === "classic" ? "Classic" : "Memory";
   els.currentFormation.textContent = state.formation;
   const lineupComplete = lineUpIsComplete();
+  const awaitingSelection = Boolean(state.currentTeam && !lineupComplete);
   els.startSeason.hidden = !lineupComplete || state.view !== "game";
-  els.rollTeam.hidden = lineupComplete || state.view !== "game";
-  els.testSeason.hidden = lineupComplete || state.view !== "game";
-  els.rollTeam.disabled = lineupComplete;
+  els.rollTeam.hidden = lineupComplete || state.view !== "game" || awaitingSelection;
+  els.testSeason.hidden = lineupComplete || state.view !== "game" || awaitingSelection;
+  els.rollTeam.disabled = lineupComplete || awaitingSelection;
   els.testSeason.disabled = state.view !== "home" && state.view !== "game";
   els.currentTeam.textContent = currentTeamLabel();
 }
@@ -792,7 +824,7 @@ function renderPitch() {
               <span class="slot-label">${slot}</span>
               ${
                 lockedPlayer
-                  ? `<span class="slot-bubble" aria-hidden="true" title="${escapeHtml(lockedPlayer.name)}" ${bubbleStyle}>${escapeHtml(getPlayerBubbleLabel(lockedPlayer))}</span>`
+                  ? `<span class="slot-bubble" aria-hidden="true" title="${escapeHtml(lockedPlayer.name)}" ${bubbleStyle}>${escapeHtml(lockedPlayer.name)}</span>`
                   : ""
               }
             </button>
@@ -845,8 +877,10 @@ function renderSeasonHeader() {
   if (complete) {
     renderSeasonTable();
     renderSeasonActions();
+    renderSeasonReveal();
   } else {
     els.seasonActions.hidden = true;
+    if (els.seasonReveal) els.seasonReveal.hidden = true;
   }
 }
 
@@ -946,6 +980,29 @@ function renderSeasonTable() {
 function renderSeasonActions() {
   if (!state.season) return;
   els.seasonActions.hidden = !state.season.complete;
+}
+
+function renderSeasonReveal() {
+  if (!state.season || !els.seasonReveal || !els.seasonRevealGrid) return;
+  const showReveal = state.mode === "memory" && state.season.complete;
+  els.seasonReveal.hidden = !showReveal;
+  if (!showReveal) {
+    els.seasonRevealGrid.innerHTML = "";
+    return;
+  }
+
+  const lineup = orderedLineupFromMap(state.lineup);
+  els.seasonRevealGrid.innerHTML = lineup
+    .map(
+      (player, index) => `
+        <article class="season-reveal-card">
+          <div class="season-reveal-slot">${escapeHtml(FORMATIONS[state.formation][index])}</div>
+          <div class="season-reveal-name">${escapeHtml(player.name)}</div>
+          <div class="season-reveal-rating">${escapeHtml(String(player.ovr ?? "??"))}</div>
+        </article>
+      `,
+    )
+    .join("");
 }
 
 function currentUserRow() {
@@ -1111,20 +1168,17 @@ async function postShareResult() {
 function renderSeason() {
   renderSeasonHeader();
   renderSeasonFeed();
+  renderSeasonReveal();
   if (state.season && !state.season.complete) {
     els.seasonTableWrap.innerHTML = `<div class="season-placeholder">The table will appear when the season finishes.</div>`;
     els.seasonActions.hidden = true;
+    if (els.seasonReveal) els.seasonReveal.hidden = true;
   }
 }
 
 function scrollSeasonFeedToBottom() {
   if (!els.seasonFeed) return;
   requestAnimationFrame(() => {
-    const lastMatch = els.seasonFeed.lastElementChild;
-    if (lastMatch) {
-      lastMatch.scrollIntoView({ block: "end", inline: "nearest" });
-      return;
-    }
     els.seasonFeed.scrollTop = Math.max(0, els.seasonFeed.scrollHeight - els.seasonFeed.clientHeight);
   });
 }
@@ -1138,6 +1192,7 @@ function finishSeason() {
   renderSeasonFeed();
   renderSeasonTable();
   renderSeasonActions();
+  renderSeasonReveal();
 }
 
 function renderAll() {
@@ -1156,7 +1211,7 @@ function clearSeasonTimer() {
 }
 
 function rollTeam() {
-  if (!state.teams.length || lineUpIsComplete()) return;
+  if (!state.teams.length || lineUpIsComplete() || state.currentTeam) return;
   const season = randomChoice(state.seasons);
   state.currentTeam = randomTeamForSeason(season) ?? randomChoice(state.teams);
   state.selectedPlayerId = null;
