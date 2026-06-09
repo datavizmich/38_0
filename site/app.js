@@ -808,9 +808,9 @@ function renderPitch() {
     <div class="pitch-grid">
       ${formation
         .map((slot, index) => {
-          const lockedPlayer = state.lineup.get(index) ?? null;
-          const canAcceptSelected = selected ? playerCanPlaySlot(selected, slot) : false;
-          const canBeClicked = Boolean(selected && canAcceptSelected);
+      const lockedPlayer = state.lineup.get(index) ?? null;
+      const canAcceptSelected = selected ? playerCanPlaySlot(selected, slot) : false;
+      const canBeClicked = Boolean(selected && canAcceptSelected && !lockedPlayer);
           const layout = FORMATION_LAYOUTS[state.formation][index];
           const bubbleStyle = lockedPlayer ? teamStyleAttr(lockedPlayer.team) : "";
           return `
@@ -841,12 +841,8 @@ function renderPitch() {
       const player = selectedPlayer();
       if (!player) return;
       if (!playerCanPlaySlot(player, slot)) return;
-
-      for (const [otherIndex, otherPlayer] of [...state.lineup.entries()]) {
-        if (otherPlayer.id === player.id || otherIndex === slotIndex) {
-          state.lineup.delete(otherIndex);
-        }
-      }
+      if (state.lineup.has(slotIndex)) return;
+      if ([...state.lineup.values()].some((otherPlayer) => otherPlayer.id === player.id)) return;
 
       state.lineup.set(slotIndex, player);
       state.selectedPlayerId = null;
