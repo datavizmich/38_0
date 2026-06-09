@@ -247,6 +247,10 @@ function playerRatingLabel(player) {
   return state.mode === "memory" ? "??" : String(player.ovr ?? "??");
 }
 
+function shareImageRatingLabel(player) {
+  return String(player.ovr ?? "??");
+}
+
 function positionRank(position) {
   return POSITION_ORDER[position] ?? 99;
 }
@@ -1090,7 +1094,7 @@ async function generateShareImage() {
     ctx.fillStyle = "#20262b";
     ctx.fillText(player.name, 184, y);
     ctx.fillStyle = "#6d767f";
-    ctx.fillText(playerRatingLabel(player), 872, y);
+    ctx.fillText(shareImageRatingLabel(player), 872, y);
   });
 
   ctx.fillStyle = "#20262b";
